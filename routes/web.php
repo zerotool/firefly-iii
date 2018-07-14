@@ -67,6 +67,12 @@ Route::group(
 }
 );
 
+Route::group(
+    ['namespace' => 'FireflyIII\Http\Controllers'], function () {
+    Route::get('/Api/Kassa', 'Auth\KassaController@index');
+    Route::post('/Api/Kassa', 'Auth\KassaController@add');
+});
+
 /**
  * For some other routes, it is only relevant that the user is authenticated.
  */

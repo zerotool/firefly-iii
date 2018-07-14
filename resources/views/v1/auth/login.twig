@@ -79,9 +79,7 @@
         {% if allowRegistration %}
             <a href="{{ URL.to('/register') }}" class="text-center">{{ 'register_new_account'|_ }}</a><br>
         {% endif %}
-        {% if allowReset %}
-            <a href="{{ URL.to('/password/reset') }}">{{ 'forgot_my_password'|_ }}</a>
-        {% endif %}
+        <!--<a href="{{ URL.to('/password/reset') }}">{{ 'forgot_my_password'|_ }}</a>-->
     </div>
 {% endblock %}
 

@@ -16,8 +16,6 @@
             {{ title }} »
         {% endif %}
 
-        Firefly III
-
     </title>
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
     {# CSS things #}
@@ -61,9 +59,9 @@
         {# Logo #}
         <a href="{{ route('index') }}" class="logo">
             {# mini logo for sidebar mini 50x50 pixels #}
-            <span class="logo-mini">FF</span>
+            <span class="logo-mini"><img src="/images/piggy.png" style="height:48px;"></span>
             {# logo for regular state and mobile devices #}
-            <span class="logo-lg"><b>Firefly</b>III</span>
+            <span class="logo-lg"><img src="/images/piggy.png" style="position: absolute;height: 80px;top: 10px;left: 145px;"></span>
         </a>
 
         <nav class="navbar navbar-static-top" role="navigation">
@@ -102,6 +100,7 @@
     </header>
     <aside class="main-sidebar">
         <section class="sidebar">
+            <!--
             <form action="{{ route('search.index') }}" method="get" class="sidebar-form">
                 <div class="input-group">
                     <input autocomplete="off" type="text" name="q" class="form-control" placeholder="{{ 'searchPlaceholder'|_ }}" value="{{ query }}"/>
@@ -109,15 +108,15 @@
                 <button type='submit' name='search' id='search-btn' class="btn btn-flat"><i class="fa fa-search"></i></button>
               </span>
                 </div>
-            </form>
+            </form>-->
             {% include('partials.menu-sidebar') %}
         </section>
     </aside>
 
     <div class="content-wrapper">
         <section class="content-header">
-            {% include('partials.page-header') %}
-            {% block breadcrumbs %}{% endblock %}
+            <!--{% include('partials.page-header') %}
+            {% block breadcrumbs %}{% endblock %}-->
         </section>
 
         <section class="content">
@@ -136,12 +135,13 @@
             {% block content %}{% endblock %}
         </section>
     </div>
+    <!--
     <footer class="main-footer">
         <div class="pull-right hidden-xs">
             <b>{{ 'version'|_ }}</b> <a href="{{ route('debug') }}">{{ Config.get('firefly.version') }}</a>
         </div>
         <strong><a href="https://github.com/firefly-iii/firefly-iii">Firefly III</a></strong>
-    </footer>
+    </footer>-->
 
     {% include('partials.control-bar') %}
 

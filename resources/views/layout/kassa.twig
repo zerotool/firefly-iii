@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="{{ trans('config.html_language') }}">
+<head>
+    <base href="{{ route('index') }}/">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow, noarchive, noodp, NoImageIndex, noydir">
+    <title>
+       Касса
+    </title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <link href="css/app.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    <link href="lib/adminlte/css/AdminLTE.min.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    <link href="lib/adminlte/css/skins/skin-blue-light.min.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    <link href="css/daterangepicker.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    <link href="css/firefly.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    {% if not shownDemo %}
+        <link href="lib/intro/introjs.min.css?v={{ FF_VERSION }}" rel="stylesheet" type="text/css"/>
+    {% endif %}
+
+    {% block styles %}{% endblock %}
+    <!--[if lt IE 9]>
+    <script src="js/lib/html5shiv.min.js?v={{ FF_VERSION }}"></script>
+    <script src="js/lib/respond.min.js?v={{ FF_VERSION }}"></script>
+    <![endif]-->
+    <script type="text/javascript">
+        var forceDemoOff = false;
+    </script>
+
+    {# favicons #}
+    {% include('partials.favicons') %}
+
+    <style>
+        table.kassa-payments td, th {
+            padding: 2px 10px;
+            font-size: 18px;
+        }
+        table.kassa-payments tr:nth-child(even) {
+            background-color: #ededed;
+        }
+
+
+        table.kassa-payments tr:nth-child(odd) {
+            background-color: white;
+        }
+    </style>
+
+
+</head>
+<body class="skin-blue-light sidebar-mini hold-transition">
+<div class="wrapper" id="app">
+
+    <header class="main-header">
+
+        {# Logo #}
+        <a href="{{ route('index') }}" class="logo">
+            {# mini logo for sidebar mini 50x50 pixels #}
+            <span class="logo-mini"><img src="/images/piggy.png" style="height:48px;"></span>
+            {# logo for regular state and mobile devices #}
+            <span class="logo-lg"><img src="/images/piggy.png" style="position: absolute;height: 80px;top: 10px;left: 145px;"></span>
+        </a>
+
+
+    </header>
+    <aside class="main-sidebar">
+        <section class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="{{ activeRouteStrict('index') }}">
+                    <a href="/Api/Kassa?UserId={{ userid }}"><i class="fa fa fa-credit-card fa-fw"></i>
+                        <span>Касса</span></a>
+                </li>
+                <!--
+                <li class="{{ activeRouteStrict('index') }}">
+                    <a href="#"><i class="fa fa-tasks fa-fw"></i>
+                        <span>Смены</span></a>
+                </li>
+                <li class="{{ activeRouteStrict('index') }}">
+                    <a href="#"><i class="fa fa-dashboard fa-fw"></i>
+                        <span>Расходники</span></a>
+                </li>-->
+            </ul>
+        </section>
+    </aside>
+
+    <div class="content-wrapper">
+        <section class="content-header">
+            <!--{% include('partials.page-header') %}
+            {% block breadcrumbs %}{% endblock %}-->
+        </section>
+
+        <section class="content">
+            {% if IS_DEMO_SITE %}
+                <div class="row no-print">
+                    <div class="col-lg-12">
+                        <p class="well">
+                            {% include ['demo.' ~ Route.getCurrentRoute.getName, 'demo.no-demo-text'] %}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% include('partials.flashes') %}
+
+            {% block content %}{% endblock %}
+        </section>
+    </div>
+    <!--
+    <footer class="main-footer">
+        <div class="pull-right hidden-xs">
+            <b>{{ 'version'|_ }}</b> <a href="{{ route('debug') }}">{{ Config.get('firefly.version') }}</a>
+        </div>
+        <strong><a href="https://github.com/firefly-iii/firefly-iii">Firefly III</a></strong>
+    </footer>-->
+
+    {% include('partials.control-bar') %}
+
+</div>
+<div class="modal fade" id="defaultModal" tabindex="-1" role="dialog">
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="helpModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="helpTitle">&nbsp;</h4>
+            </div>
+            <div class="modal-body" id="helpBody">&nbsp;</div>
+            <div class="modal-footer">
+                <small class="pull-left">
+                    {{ 'need_more_help'|_ }}
+                </small>
+                <br/>
+                <small class="pull-left">
+                    {{ trans('firefly.reenable_intro_text')|raw }}
+                </small>
+                <button type="button" class="btn btn-default" data-dismiss="modal">{{ 'close'|_ }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/lib/moment.min.js?v={{ FF_VERSION }}" type="text/javascript"></script>
+<script src="js/ff/moment/{{ language }}.js?v={{ FF_VERSION }}" type="text/javascript"></script>
+<script src="{{ route('javascript.variables') }}?ext=.js&amp;v={{ FF_VERSION }}{% if account %}&amp;account={{ account.id }}{% endif %}" type="text/javascript"></script>
+<script src="js/app.js?v={{ FF_VERSION }}" type="text/javascript"></script>
+
+<script src="js/lib/daterangepicker.js?v={{ FF_VERSION }}" type="text/javascript"></script>
+<script src="lib/adminlte/js/app.min.js?v={{ FF_VERSION }}" type="text/javascript"></script>
+<script type="text/javascript" src="js/lib/accounting.min.js?v={{ FF_VERSION }}"></script>
+
+<script type="text/javascript" src="js/ff/firefly.js?v={{ FF_VERSION }}"></script>
+<script type="text/javascript">
+    var helpPageTitle = "{{ trans('firefly.help_for_this_page')|escape('js') }}";
+    var noHelpForPage = "{{ trans('firefly.no_help_could_be_found')|escape('js') }}";
+    var noHelpForPageTitle = "{{ trans('firefly.no_help_title')|escape('js') }}";
+</script>
+<script type="text/javascript" src="js/ff/help.js?v={{ FF_VERSION }}"></script>
+{% if not shownDemo %}
+    <script type="text/javascript">
+        var nextLabel = "{{ trans('firefly.intro_next_label')|escape('js') }}";
+        var prevLabel = "{{ trans('firefly.intro_prev_label')|escape('js') }}";
+        var skipLabel = "{{ trans('firefly.intro_skip_label')|escape('js') }}";
+        var doneLabel = "{{ trans('firefly.intro_done_label')|escape('js') }}";
+        var routeForTour = "{{ current_route_name }}";
+        var routeStepsUri = "{{ route('json.intro', [current_route_name, what|default("")]) }}";
+        var routeForFinishedTour = "{{ route('json.intro.finished', [current_route_name, what|default("")]) }}";
+    </script>
+    <script type="text/javascript" src="lib/intro/intro.min.js?v={{ FF_VERSION }}"></script>
+    <script type="text/javascript" src="js/ff/intro/intro.js?v={{ FF_VERSION }}"></script>
+{% endif %}
+{% block scripts %}{% endblock %}
+
+{% if env('ANALYTICS_ID','') != '' %}
+    <script>
+        // send pageview
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+        ga('create', '{{ env('ANALYTICS_ID', 'XXX-XX-X') }}', {'siteSpeedSampleRate': 100});
+        ga('send', 'pageview');
+    </script>
+{% endif %}
+</body>
+</html>

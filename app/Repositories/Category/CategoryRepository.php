@@ -327,6 +327,21 @@ class CategoryRepository implements CategoryRepositoryInterface
     /** @noinspection MoreThanThreeArgumentsInspection */
 
     /**
+     * Returns a list of all the categories belonging to a user.
+     *
+     * @return Collection
+     */
+    public function getAllCategories($nameContains = false): Collection
+    {
+        $set = Category::all()->filter(function (Category $category) use ($nameContains) {
+            return !$nameContains || substr_count($category->name, $nameContains);
+        })->sortBy(function (Category $category) {
+            return strtolower($category->name);
+        });
+        return $set;
+    }
+
+    /**
      * @param Category   $category
      * @param Collection $accounts
      *

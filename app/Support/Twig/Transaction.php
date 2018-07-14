@@ -37,6 +37,7 @@ class Transaction extends Twig_Extension
     public function getFilters(): array
     {
         $filters = [
+            new Twig_SimpleFilter('transactionWhen', [TransactionExtension::class, 'when']),
             new Twig_SimpleFilter('transactionIcon', [TransactionExtension::class, 'icon'], ['is_safe' => ['html']]),
             new Twig_SimpleFilter('transactionDescription', [TransactionExtension::class, 'description']),
             new Twig_SimpleFilter('transactionIsSplit', [TransactionExtension::class, 'isSplit'], ['is_safe' => ['html']]),

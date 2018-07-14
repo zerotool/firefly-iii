@@ -165,8 +165,8 @@ class JournalFormRequest extends Request
             'internal_reference'        => 'min:1|max:255|nullable',
             'notes'                     => 'min:1|max:50000|nullable',
             // and then transaction rules:
-            'description'               => 'required|between:1,255',
-            'amount'                    => 'numeric|required|more:0|less:10000000',//
+            'description'               => 'between:1,255|nullable',
+            'amount'                    => 'numeric|required|more:0',
             'budget_id'                 => 'mustExist:budgets,id|belongsToUser:budgets,id|nullable',
             'category'                  => 'between:1,255|nullable',
             'source_id'                 => 'numeric|belongsToUser:accounts,id|nullable',

@@ -33,9 +33,12 @@ use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionJournalMeta;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
+use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
+use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Support\Http\Controllers\ModelInformation;
 use Illuminate\Http\JsonResponse;
+use FireflyIII\Models\AccountType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Log;
@@ -54,6 +57,10 @@ class SingleController extends Controller
     private $attachments;
     /** @var BudgetRepositoryInterface The budget repository */
     private $budgets;
+    /** @var CategoryRepositoryInterface */
+    private $categories;
+    /** @var AccountRepositoryInterface */
+    private $accounts;
     /** @var JournalRepositoryInterface Journals and transactions overview */
     private $repository;
 
@@ -73,6 +80,8 @@ class SingleController extends Controller
         $this->middleware(
             function ($request, $next) {
                 $this->budgets     = app(BudgetRepositoryInterface::class);
+                $this->categories  = app(CategoryRepositoryInterface::class);
+                $this->accounts  = app(AccountRepositoryInterface::class);
                 $this->attachments = app(AttachmentHelperInterface::class);
                 $this->repository  = app(JournalRepositoryInterface::class);
 
@@ -160,6 +169,12 @@ class SingleController extends Controller
         $subTitleIcon   = 'fa-plus';
         $optionalFields = app('preferences')->get('transaction_journal_optional_fields', [])->data;
         $source         = (int)$request->get('source');
+        $categories = array_merge([null => '(none)'],
+            $this->categories->getCategories()->pluck('name', 'name')->toArray());
+        $sources = array_merge([null => '(none)'],
+            $this->accounts->getAccountsByType([AccountType::REVENUE])->pluck('name', 'name')->toArray());
+        $destinations = array_merge([null => '(none)'],
+            $this->accounts->getAccountsByType([AccountType::EXPENSE])->pluck('name', 'name')->toArray());
 
         // grab old currency ID from old data:
         $currencyID                             = (int)$request->old('amount_currency_id_amount');
@@ -182,7 +197,7 @@ class SingleController extends Controller
 
         return view(
             'transactions.single.create',
-            compact('subTitleIcon', 'budgets', 'what', 'subTitle', 'optionalFields', 'preFilled')
+            compact('subTitleIcon', 'budgets', 'what', 'subTitle', 'optionalFields', 'preFilled', 'categories', 'sources', 'destinations')
         );
     }
 
@@ -378,8 +393,10 @@ class SingleController extends Controller
         $doSplit       = 1 === (int)$request->get('split_journal');
         $createAnother = 1 === (int)$request->get('create_another');
         $data          = $request->getJournalData();
+        if (empty($data['description'])) {
+            $data['description'] = $data['transactions'][0]['category_name'];
+        }
         $journal       = $repository->store($data);
-
 
         if (null === $journal->id) {
             // error!

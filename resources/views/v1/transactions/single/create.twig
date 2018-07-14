@@ -28,6 +28,8 @@
                             </div>
                         </div>
 
+                        {# CATEGORY ALWAYS #}
+                        {{ ExpandedForm.select('category', categories) }}
 
                         {# DESCRIPTION IS ALWAYS AVAILABLE #}
                         {{ ExpandedForm.text('description') }}
@@ -36,10 +38,10 @@
                         {{ ExpandedForm.activeLongAccountList('source_id', null, {label: trans('form.asset_source_account') }) }}
 
                         {# FREE FORMAT SOURCE ACCOUNT ONLY FOR DEPOSITS #}
-                        {{ ExpandedForm.text('source_name', null, {label: trans('form.revenue_account')}) }}
+                        {{ ExpandedForm.select('source_name', sources, null, {label: trans('form.revenue_account')}) }}
 
                         {# FREE FORMAT DESTINATION ACCOUNT ONLY FOR EXPENSES #}
-                        {{ ExpandedForm.text('destination_name', null, {label: trans('form.expense_account')}) }}
+                        {{ ExpandedForm.select('destination_name', destinations, null, {label: trans('form.expense_account')}) }}
 
                         {# SELECTABLE DESTINATION ACCOUNT ONLY FOR TRANSFERS AND DEPOSITS #}
                         {{ ExpandedForm.activeLongAccountList('destination_id', null, {label: trans('form.asset_destination_account')} ) }}
@@ -81,9 +83,6 @@
                             {{ ExpandedForm.select('budget_id', budgets, null, {helpText: trans('firefly.no_budget_pointer', {link: route('budgets.index')})}) }}
                         {% endif %}
 
-                        {# CATEGORY ALWAYS #}
-                        {{ ExpandedForm.text('category') }}
-
                         {# TAGS #}
                         {{ ExpandedForm.text('tags') }}
 
@@ -105,8 +104,8 @@
                     not optionalFields.internal_reference or
                     not optionalFields.notes or
                     not optionalFields.attachments %}
-                    <p class="text-center text-success"><i class="fa fa-info-circle"></i>
-                        <em>{{ trans('firefly.hidden_fields_preferences', {link: route('preferences.index')})|raw }}</em></p>
+                    <!--<p class="text-center text-success"><i class="fa fa-info-circle"></i>
+                        <em>{{ trans('firefly.hidden_fields_preferences', {link: route('preferences.index')})|raw }}</em></p>-->
                 {% endif %}
 
                 {# box for dates #}

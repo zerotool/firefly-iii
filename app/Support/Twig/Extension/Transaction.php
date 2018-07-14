@@ -423,4 +423,9 @@ class Transaction extends Twig_Extension
 
         return $txt;
     }
+
+    public function when(TransactionModel $transaction): string
+    {
+        return (string)$transaction->created_at;
+    }
 }
