@@ -116,7 +116,7 @@ function getBalanceBox() {
         var count = 0;
         for (x in data.sums) {
             if (count > 1) {
-                return;
+                //return;
             }
             current = $('#box-balance-list').html();
             sum = data.sums[x];
