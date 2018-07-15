@@ -21,6 +21,21 @@ class KassaController extends Controller
     /** @var CategoryRepository */
     private $categories;
 
+    public function bookings()
+    {
+        $src = 'https://admin.xotelia.com/admin/';
+        $kassaid = $_GET['UserId'];
+        return view('kassa.frame', compact('src', 'kassaid'));
+    }
+
+
+    public function schedule()
+    {
+        $src = 'https://docs.google.com/spreadsheets/d/1UFK3Jq67Mr74KoTP45x-8zN4AEqkCzTucyIvq0inwLs/edit';
+        $kassaid = $_GET['UserId'];
+        return view('kassa.frame', compact('src', 'kassaid'));
+    }
+
     /**
      * Show the kassa
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View

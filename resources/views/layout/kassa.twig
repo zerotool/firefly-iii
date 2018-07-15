@@ -68,7 +68,7 @@
     <header class="main-header">
 
         {# Logo #}
-        <a href="{{ route('index') }}" class="logo">
+        <a href="/Api/Kassa?UserId={{ kassaid }}" class="logo">
             {# mini logo for sidebar mini 50x50 pixels #}
             <span class="logo-mini"><img src="/images/piggy.png" style="height:48px;"></span>
             {# logo for regular state and mobile devices #}
@@ -81,18 +81,17 @@
         <section class="sidebar">
             <ul class="sidebar-menu">
                 <li class="{{ activeRouteStrict('index') }}">
-                    <a href="/Api/Kassa?UserId={{ userid }}"><i class="fa fa fa-credit-card fa-fw"></i>
+                    <a href="/Api/Kassa?UserId={{ kassaid }}"><i class="fa fa fa-credit-card fa-fw"></i>
                         <span>Касса</span></a>
                 </li>
-                <!--
-                <li class="{{ activeRouteStrict('index') }}">
-                    <a href="#"><i class="fa fa-tasks fa-fw"></i>
+                <li class="{{ activeRouteStrict('bookings') }}">
+                    <a href="/Api/Kassa/Bookings?UserId={{ kassaid }}"><i class="fa fa fa-tasks fa-fw"></i>
+                        <span>Бронирования</span></a>
+                </li>
+                <li class="{{ activeRouteStrict('schedule') }}">
+                    <a href="/Api/Kassa/Schedule?UserId={{ kassaid }}"><i class="fa fa fa-calendar fa-fw"></i>
                         <span>Смены</span></a>
                 </li>
-                <li class="{{ activeRouteStrict('index') }}">
-                    <a href="#"><i class="fa fa-dashboard fa-fw"></i>
-                        <span>Расходники</span></a>
-                </li>-->
             </ul>
         </section>
     </aside>
