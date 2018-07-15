@@ -2083,7 +2083,7 @@ a:focus {
 .progress-description,
 .info-box-text {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
