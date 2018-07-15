@@ -87,7 +87,7 @@ class Range
 
         // send error to view if could not set money format
         if (false === $moneyResult) {
-            app('view')->share('invalidMonetaryLocale', true); // @codeCoverageIgnore
+            //View::share('invalidMonetaryLocale', true); // @codeCoverageIgnore
         }
 
         // save some formats:
