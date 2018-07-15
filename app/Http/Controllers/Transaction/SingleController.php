@@ -396,6 +396,7 @@ class SingleController extends Controller
         if (empty($data['description'])) {
             $data['description'] = $data['transactions'][0]['category_name'];
         }
+        //var_dump($data);die;
         $journal       = $repository->store($data);
 
         if (null === $journal->id) {

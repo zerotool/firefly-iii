@@ -25,7 +25,7 @@ class KassaController extends Controller
      * Show the kassa
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request)
+    public function index(Request $request, JournalRepositoryInterface $repository)
     {
         $this->categories = app(CategoryRepository::class);
         $this->middleware('guest');
@@ -36,36 +36,165 @@ class KassaController extends Controller
         $account = Account::where('kassa_id', '=', $kassaid)->first();
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts(new Collection([$account]))->setLimit(150)->setPage(1);
-        //$collector->setRange($start, $end);
         $transactions = $collector->getPaginatedJournals();
-        //$transactions->setPath(route('accounts.show', [$account->id, $start->format('Y-m-d'), $end->format('Y-m-d')]));
         $categories = array_merge([null => '(none)'],
             $this->categories->getAllCategories('Гостевые Комнаты /')->pluck('name', 'name')->toArray());
         $balance = app('steam')->balance($account, new Carbon());
-        return view('kassa.index', compact('transactions','categories', 'balance', 'kassaid', 'account'));
+        return view('kassa.index', compact('transactions', 'categories', 'balance', 'kassaid', 'account'));
+    }
+
+    private function import(JournalRepositoryInterface $repository)
+    {
+        set_time_limit(0);
+        $kassaCashAccountId = 3; // Все старые платежи без банковского айди НАЛИЧНЫЕ в account 3
+        $catsMapping = [];
+        foreach (json_decode(file_get_contents('../import/cats.json'), true)['data'] as $el) {
+            $catsMapping[$el['kassa_id']] = $el['name'];
+        }
+        $usersMapping = [];
+        foreach (json_decode(file_get_contents('../import/users.json'), true)['data'] as $el) {
+            $usersMapping[$el['kassa_id']] = $el['name'];
+        }
+        $ops = explode(PHP_EOL, trim(file_get_contents('../import/ops_full.txt')));
+        $opsDataIndexes = [];
+        $opsData = [];
+        foreach ($ops as $key => $op) {
+            $op = explode("\t", trim($op));
+            if ($key == 0) {
+                foreach ($op as $opKey) {
+                    $opsDataIndexes[] = trim(strtolower($opKey));
+                }
+            } else {
+                foreach ($op as $opKey => $opValue) {
+                    $opsData[$key - 1][$opsDataIndexes[$opKey]] = $opValue;
+                }
+            }
+        }
+
+        $lastprocessed = explode('\t', file_get_contents('../import/lastprocessed.txt'))[0];
+        foreach ($opsData as $k => $op) {
+            if ($k <= $lastprocessed) {
+                continue;
+            }
+            if ($op['bankaccountid'] == 'NULL') {
+                $op['bankaccountid'] = null;
+            }
+            if ($op['categoryid'] == 'NULL') {
+                $op['categoryid'] = null;
+            }
+            if (empty($op['comment']) || $op['comment'] == 'NULL') {
+                $op['comment'] = '-';
+            }
+            if (empty($op['categoryid'])) {
+                $categoryName = null;
+            } else {
+                $categoryName = $catsMapping[$op['categoryid']];
+            }
+            if ($op['amount'] < 0) {
+                $type = 'withdrawal';
+            } else {
+                $type = 'deposit';
+            }
+            $destinationSourceName = $usersMapping[$op['userid']];
+            if ($destinationSourceName == 'Перевод') {
+                if (empty($op['bankaccountid'])) {
+                    // Перевод в нал - пропускаем
+                    file_put_contents('../import/skipped.txt', print_r($op, true) . PHP_EOL, FILE_APPEND);
+                    file_put_contents('../import/lastprocessed.txt', $k . '\t' . print_r($op, true));
+                    continue;
+                } else {
+                    $type = 'transfer';
+                    if ($op['amount'] < 0) { // Перевод из банка в нал
+                        $sourceAccount = Account::where('kassa_id', '=', $op['bankaccountid'])->first();
+                        $destinationAccount = Account::where('id', '=', $kassaCashAccountId)->first();
+                    } else { // Перевод из нала в банк
+                        $sourceAccount = Account::where('id', '=', $kassaCashAccountId)->first();
+                        $destinationAccount = Account::where('kassa_id', '=', $op['bankaccountid'])->first();
+                    }
+                    $this->addTransaction(
+                        $type,
+                        $sourceAccount,
+                        $categoryName,
+                        abs($op['amount']),
+                        $op['comment'],
+                        $repository,
+                        '',
+                        $op['created'],
+                        $destinationAccount
+                    );
+                }
+            } else {
+                if (empty($op['bankaccountid'])) {
+                    $account = Account::where('id', '=', $kassaCashAccountId)->first();
+                } else {
+                    $account = Account::where('kassa_id', '=', $op['bankaccountid'])->first();
+                }
+                $this->addTransaction(
+                    $type,
+                    $account,
+                    $categoryName,
+                    abs($op['amount']),
+                    $op['comment'],
+                    $repository,
+                    $destinationSourceName,
+                    $op['created']
+                );
+            }
+            file_put_contents('../import/lastprocessed.txt', $k . '\t' . print_r($op, true));
+        }
     }
 
     public function add(Request $request, JournalRepositoryInterface $repository)
     {
         $kassaId = $_GET['UserId'];
-        $account = Account::where('kassa_id', '=', $kassaId)->first();
-        $description = $request->get("description");
         $amount = $request->get("amount");
         $type = $amount < 0 ? 'withdrawal' : 'deposit';
+        $account = Account::where('kassa_id', '=', $kassaId)->first();
+        $this->addTransaction(
+            $type,
+            $account,
+            $request->get("category"),
+            $amount,
+            $request->get("description"),
+            $repository,
+            trim(str_replace(['Касса / ', ' (РУБ)'], '', $account->name))
+        );
+        return redirect('Api/Kassa?UserId=' . $kassaId);
+    }
+
+    private function addTransaction(
+        $type,
+        Account $sourceAccount,
+        $categoryName,
+        $amount,
+        $description,
+        JournalRepositoryInterface $repository,
+        $destinationSourceName,
+        $time = null,
+        Account $destinationAccount = null
+    ) {
+        if (empty($time)) {
+            $time = now();
+        }
         if ($type == 'withdrawal') {
             $sourceName = '';
-            $destinationName = trim(str_replace(['Касса / ', ' (РУБ)'], '', $account->name));
-            $sourceId = $account->id;
+            $destinationName = $destinationSourceName;
+            $sourceId = $sourceAccount->id;
             $destinationId = null;
-        } else {
+        } elseif ($type == 'deposit') {
             $sourceId = null;
-            $destinationId = $account->id;
-            $sourceName = trim(str_replace(['Касса / ', ' (РУБ)'], '', $account->name));
+            $destinationId = $sourceAccount->id;
+            $sourceName = $destinationSourceName;
+            $destinationName = '';
+        } else {
+            $sourceId = $sourceAccount->id;
+            $destinationId = $destinationAccount->id;
+            $sourceName = '';
             $destinationName = '';
         }
         $data = [
             'type' => $type,
-            'date' => new Carbon(),
+            'date' => new Carbon($time),
             'user' => 1,
             'tags' => null,
             'description' => $description,
@@ -97,7 +226,7 @@ class KassaController extends Controller
                     'foreign_amount' => null,
                     'identifier' => 0,
                     'amount' => $amount,
-                    'category_name' => $request->get("category"),
+                    'category_name' => $categoryName,
                     'source_id' => $sourceId,
                     'source_name' => $sourceName,
                     'destination_id' => $destinationId,
@@ -111,7 +240,5 @@ class KassaController extends Controller
         }
         $journal = $repository->store($data);
         session()->flash('success', (string)trans('firefly.stored_journal', ['description' => $journal->description]));
-
-        return redirect('Api/Kassa?UserId=' . $kassaId);
     }
 }

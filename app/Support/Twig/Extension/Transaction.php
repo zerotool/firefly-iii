@@ -426,6 +426,6 @@ class Transaction extends Twig_Extension
 
     public function when(TransactionModel $transaction): string
     {
-        return (string)$transaction->created_at;
+        return date("d.m.Y", strtotime((string)$transaction->date));
     }
 }
