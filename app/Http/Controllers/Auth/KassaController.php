@@ -11,7 +11,7 @@ use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\Account;
 use FireflyIII\Repositories\Category\CategoryRepository;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\JournalCollector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -40,7 +40,7 @@ class KassaController extends Controller
      * Show the kassa
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request, JournalRepositoryInterface $repository)
+    public function index(Request $request, JournalCollector $repository)
     {
         $this->categories = app(CategoryRepository::class);
         $this->middleware('guest');
@@ -49,7 +49,8 @@ class KassaController extends Controller
             die("no such account allowed");
         }
         $account = Account::where('kassa_id', '=', $kassaid)->first();
-        $collector = app(JournalCollectorInterface::class);
+        $collector = app(JournalCollector::class);
+        $collector->setUser(auth()->user());
         $collector->setAccounts(new Collection([$account]))->setLimit(150)->setPage(1);
         $transactions = $collector->getPaginatedJournals();
         $categories = array_merge([null => '(none)'],
@@ -58,7 +59,7 @@ class KassaController extends Controller
         return view('kassa.index', compact('transactions', 'categories', 'balance', 'kassaid', 'account'));
     }
 
-    private function import(JournalRepositoryInterface $repository)
+    private function import(JournalCollector $repository)
     {
         set_time_limit(0);
         $kassaCashAccountId = 3; // Все старые платежи без банковского айди НАЛИЧНЫЕ в account 3

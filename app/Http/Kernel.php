@@ -28,6 +28,7 @@ use FireflyIII\Http\Middleware\Binder;
 use FireflyIII\Http\Middleware\EncryptCookies;
 use FireflyIII\Http\Middleware\Installer;
 use FireflyIII\Http\Middleware\IsAdmin;
+use FireflyIII\Http\Middleware\Kassa;
 use FireflyIII\Http\Middleware\Range;
 use FireflyIII\Http\Middleware\RedirectIfAuthenticated;
 use FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated;
@@ -140,6 +141,10 @@ class Kernel extends HttpKernel
                 VerifyCsrfToken::class,
                 Binder::class,
                 Authenticate::class,
+            ],
+
+            'kassa' => [
+                Kassa::class
             ],
 
             // MUST be logged in

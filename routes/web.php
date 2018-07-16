@@ -68,7 +68,7 @@ Route::group(
 );
 
 Route::group(
-    ['namespace' => 'FireflyIII\Http\Controllers'], function () {
+    ['middleware' => 'kassa', 'namespace' => 'FireflyIII\Http\Controllers'], function () {
     Route::get('/Api/Kassa', 'Auth\KassaController@index');
     Route::get('/Api/Kassa/Bookings', 'Auth\KassaController@bookings');
     Route::get('/Api/Kassa/Schedule', 'Auth\KassaController@schedule');
