@@ -49,9 +49,8 @@ class SecureHeaders
             $google = 'www.googletagmanager.com/gtag/js'; // @codeCoverageIgnore
         }
         $csp = [
-            "default-src 'none'",
-            "object-src 'self'",
-            sprintf("script-src 'self' 'unsafe-eval' 'unsafe-inline' %s", $google),
+            //"default-src 'none'",
+            //sprintf("script-src 'self' 'unsafe-eval' 'unsafe-inline' %s", $google),
             "style-src 'self' 'unsafe-inline'",
             "base-uri 'self'",
             "font-src 'self'",
