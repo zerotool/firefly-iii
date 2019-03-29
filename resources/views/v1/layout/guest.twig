@@ -46,7 +46,8 @@
 <body class="login-page">
 <div class="login-box">
     <div class="login-logo">
-        <a href="{{ route('index') }}"><b>Firefly</b>III</a>
+        <img src="/images/piggy.png">
+        <a href="{{ route('index') }}">
     </div>
     {% block content %}{% endblock %}
 </div>
@@ -54,13 +55,17 @@
 <script type="text/javascript" src="v1/js/ff/guest.js?v={{ FF_VERSION }}"></script>
 {% if config('firefly.analytics_id')  != '' %}
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('firefly.analytics_id')  }}"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('firefly.analytics_id') }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
         gtag('js', new Date());
 
-        gtag('config', '{{ config('firefly.analytics_id')  }}');
+        gtag('config', '{{ config('firefly.analytics_id') }}');
     </script>
 {% endif %}
 </body>
