@@ -83,43 +83,7 @@
 <body class="skin-blue-light sidebar-mini hold-transition">
 <div class="wrapper" id="app">
 
-    <header class="main-header">
-
-        {# Logo #}
-        <a href="/Api/Kassa?UserId={{ kassaid }}" class="logo">
-            {# mini logo for sidebar mini 50x50 pixels #}
-            <span class="logo-mini"><img src="/images/piggy.png" style="height:48px;"></span>
-            {# logo for regular state and mobile devices #}
-            <span class="logo-lg"><img src="/images/piggy.png" style="position: absolute;height: 80px;top: 10px;left: 145px;"></span>
-        </a>
-
-
-    </header>
-    <aside class="main-sidebar">
-        <section class="sidebar">
-            <ul class="sidebar-menu">
-                <li class="{{ activeRouteStrict('index') }}">
-                    <a href="/Api/Kassa?UserId={{ kassaid }}"><i class="fa fa fa-credit-card fa-fw"></i>
-                        <span>Касса</span></a>
-                </li>
-                <li class="{{ activeRouteStrict('bookings') }}">
-                    <a href="/Api/Kassa/Bookings?UserId={{ kassaid }}"><i class="fa fa fa-tasks fa-fw"></i>
-                        <span>Бронирования</span></a>
-                </li>
-                <li class="{{ activeRouteStrict('schedule') }}">
-                    <a href="/Api/Kassa/Schedule?UserId={{ kassaid }}"><i class="fa fa fa-calendar fa-fw"></i>
-                        <span>Смены</span></a>
-                </li>
-            </ul>
-        </section>
-    </aside>
-
-    <div class="content-wrapper">
-        <section class="content-header">
-            <!--{% include('partials.page-header') %}
-            {% block breadcrumbs %}{% endblock %}-->
-        </section>
-
+    <div class="content-wrapper" style="margin-left: 0 !important;">
         <section class="content">
             {% if IS_DEMO_SITE %}
                 <div class="row no-print">
