@@ -16,9 +16,8 @@ class Kassa
      */
     public function handle($request, Closure $next)
     {
-        Auth::loginUsingId(1);
+        Auth::onceUsingId(1);
         $result = $next($request);
-        Auth::logout();
         return $result;
     }
 }
