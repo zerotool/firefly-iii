@@ -1,5 +1,6 @@
 // date ranges
-var ranges = {}
+var ranges = {};
+
 {% for title, range in dateRangeConfig.ranges %}
     ranges["{{ title }}"] = [moment("{{ range[0].format('Y-m-d') }}"), moment("{{ range[1].format('Y-m-d') }}")];
 {% endfor %}
