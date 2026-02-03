@@ -879,22 +879,22 @@
         }
         
         .summary-card {
-            padding: 10px 12px;
+            padding: 12px 14px;
         }
         
         .summary-card-header {
-            font-size: 10px;
-            margin-bottom: 6px;
+            font-size: 11px;
+            margin-bottom: 8px;
         }
         
         .currency-value {
-            font-size: 13px;
+            font-size: 15px; /* Increased from 13px */
         }
         
         /* Tabs: smaller font */
         .tab {
-            padding: 8px 16px;
-            font-size: 12px;
+            padding: 10px 18px;
+            font-size: 13px; /* Increased from 12px */
         }
         
         /* Charts: full width on mobile */
@@ -922,13 +922,13 @@
         
         .table-container thead th {
             padding: 6px 4px;
-            font-size: 10px;
+            font-size: 11px; /* Increased from 10px */
             white-space: nowrap;
         }
         
         .table-container tbody td {
             padding: 6px 4px;
-            font-size: 11px;
+            font-size: 13px; /* Increased from 11px */
         }
         
         /* Make table columns more compact on mobile */
@@ -937,8 +937,10 @@
         }
         
         .table-container tbody td:last-child {
-            min-width: 70px; /* Amount column */
+            min-width: 80px; /* Amount column - increased from 70px */
             text-align: right;
+            font-size: 14px; /* Increased - amounts should be prominent */
+            font-weight: 600;
         }
         
         /* Balance widget */
@@ -958,7 +960,7 @@
     /* Mobile portrait - iPhone and smaller phones */
     @media (max-width: 576px) {
         body {
-            font-size: 13px;
+            font-size: 14px;
         }
         
         .dashboard-container {
@@ -968,46 +970,46 @@
         /* Summary cards: single column on very small screens */
         .summary-grid {
             grid-template-columns: 1fr;
-            gap: 8px;
+            gap: 10px;
         }
         
         .summary-card {
-            padding: 10px;
+            padding: 14px 16px;
         }
         
         .summary-card-header {
-            font-size: 10px;
-            margin-bottom: 6px;
+            font-size: 11px;
+            margin-bottom: 8px;
         }
         
         .currency-row {
-            padding: 3px 0;
+            padding: 4px 0;
         }
         
         .currency-label {
-            font-size: 10px;
-            min-width: 30px;
+            font-size: 12px;
+            min-width: 35px;
         }
         
         .currency-value {
-            font-size: 12px;
+            font-size: 16px; /* Increased from 12px */
         }
         
         /* Controls: even more compact */
         .controls {
-            padding: 10px;
-            gap: 10px;
+            padding: 12px;
+            gap: 12px;
         }
         
         .controls button {
-            font-size: 11px;
-            padding: 7px 10px;
+            font-size: 13px; /* Increased from 11px */
+            padding: 9px 12px; /* Increased padding */
             white-space: nowrap;
         }
         
         .controls button.preset {
-            font-size: 11px;
-            padding: 7px 8px;
+            font-size: 12px; /* Increased from 11px */
+            padding: 8px 10px; /* Increased padding */
         }
         
         /* Action buttons group */
@@ -1024,29 +1026,29 @@
         
         /* Tabs: stack if needed */
         .tabs {
-            gap: 2px;
+            gap: 4px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
         
         .tab {
-            padding: 8px 12px;
-            font-size: 11px;
+            padding: 10px 16px; /* Increased padding */
+            font-size: 13px; /* Increased from 11px */
             white-space: nowrap;
             flex-shrink: 0;
         }
         
         /* Charts: smaller height on mobile */
         .chart-wrapper {
-            height: 180px;
+            height: 200px; /* Increased from 180px */
         }
         
         .chart-title {
-            font-size: 11px;
+            font-size: 13px; /* Increased from 11px */
         }
         
         .chart-subtitle {
-            font-size: 9px;
+            font-size: 11px; /* Increased from 9px */
         }
         
         /* Table: more compact */
@@ -1056,27 +1058,27 @@
         }
         
         .table-container table {
-            font-size: 11px;
+            font-size: 13px; /* Increased from 11px */
         }
         
         .table-container thead th {
-            padding: 4px 2px;
-            font-size: 9px;
+            padding: 6px 4px; /* Increased padding */
+            font-size: 11px; /* Increased from 9px */
         }
         
         .table-container thead th:first-child {
-            width: 20px !important;
-            padding: 4px 1px;
+            width: 24px !important; /* Increased from 20px */
+            padding: 6px 2px;
         }
         
         .table-container tbody td {
-            padding: 4px 2px;
-            font-size: 10px;
+            padding: 8px 4px; /* Increased padding */
+            font-size: 13px; /* Increased from 10px */
         }
         
         .table-container tbody td:first-child {
-            width: 20px;
-            padding: 4px 1px;
+            width: 24px;
+            padding: 8px 2px;
         }
         
         .table-container tbody td:nth-child(2) {
@@ -1088,8 +1090,9 @@
         }
         
         .table-container tbody td:last-child {
-            min-width: 60px;
-            font-size: 11px;
+            min-width: 80px; /* Increased from 60px */
+            font-size: 14px; /* Increased from 11px - amounts are important */
+            font-weight: 600;
         }
         
         /* Hide Currency column on very small screens */
@@ -1100,79 +1103,80 @@
         
         /* Expand button */
         .expand-btn {
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
+            width: 24px; /* Increased from 20px */
+            height: 24px; /* Increased from 20px */
+            font-size: 16px; /* Increased from 12px */
         }
         
         /* Detail rows */
         .detail-row td {
-            padding: 4px 6px !important;
+            padding: 8px !important; /* Increased from 4px */
         }
         
         .detail-cell {
-            padding: 6px;
+            padding: 10px; /* Increased from 6px */
         }
         
         .detail-item {
-            font-size: 10px;
+            font-size: 12px; /* Increased from 10px */
         }
         
         .detail-description {
-            font-size: 11px;
+            font-size: 13px; /* Increased from 11px */
         }
         
         .detail-amount {
-            font-size: 12px;
+            font-size: 15px; /* Increased from 12px */
+            font-weight: 600;
         }
         
         /* Balance widget */
         .balance-widget {
-            padding: 10px;
+            padding: 14px; /* Increased from 10px */
         }
         
         .balance-title {
-            font-size: 10px;
-            margin-bottom: 8px;
+            font-size: 12px; /* Increased from 10px */
+            margin-bottom: 10px;
         }
         
         .balance-item-label {
-            font-size: 9px;
+            font-size: 11px; /* Increased from 9px */
         }
         
         .balance-value {
-            font-size: 13px;
+            font-size: 16px; /* Increased from 13px */
         }
         
         .balance-value.positive,
         .balance-value.negative {
-            font-size: 12px;
+            font-size: 15px; /* Increased from 12px */
         }
         
         /* Prediction section */
         .prediction-container {
-            padding: 10px;
+            padding: 12px; /* Increased from 10px */
         }
         
         .prediction-header {
-            font-size: 12px;
-            margin-bottom: 10px;
+            font-size: 14px; /* Increased from 12px */
+            margin-bottom: 12px;
         }
         
         .prediction-grid {
-            gap: 8px;
+            gap: 10px;
         }
         
         .prediction-item {
-            padding: 10px;
+            padding: 12px;
         }
         
         .prediction-item-label {
-            font-size: 9px;
+            font-size: 11px; /* Increased from 9px */
         }
         
         .prediction-value {
-            font-size: 12px;
+            font-size: 14px; /* Increased from 12px */
         }
     }
     
