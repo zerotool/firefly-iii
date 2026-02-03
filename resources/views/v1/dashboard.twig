@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Financial Dashboard</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    
+    body {
+        background: #0f172a;
+        color: #f1f5f9;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .dashboard-container {
+        padding: 16px;
+        background: #0f172a;
+        min-height: 100vh;
+    }
+    
+    .controls {
+        background: #1e293b;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .controls label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #cbd5e1;
+        margin: 0;
+    }
+    
+    .controls input[type="date"],
+    .controls button {
+        padding: 6px 12px;
+        border: 1px solid #475569;
+        border-radius: 4px;
+        background: #0f172a;
+        color: #f1f5f9;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .controls input[type="date"] {
+        min-width: 140px;
+    }
+    
+    .controls input[type="date"]:hover,
+    .controls button:hover {
+        border-color: #64748b;
+    }
+    
+    .controls input[type="date"]:focus,
+    .controls button:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .controls button {
+        cursor: pointer;
+        background: #1e293b;
+    }
+    
+    .controls button:hover {
+        background: #334155;
+    }
+    
+    .controls button.preset {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    
+    .controls button.preset:hover {
+        background: #1e293b;
+        border-color: #475569;
+    }
+    
+    .controls .divider {
+        width: 1px;
+        height: 24px;
+        background: #334155;
+        margin: 0 4px;
+    }
+    
+    .currency-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 8px;
+    }
+    
+    .currency-selector-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #cbd5e1;
+    }
+    
+    .currency-options {
+        display: flex;
+        gap: 4px;
+        background: #0f172a;
+        padding: 4px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+    }
+    
+    .currency-option {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #94a3b8;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .currency-option:hover {
+        color: #cbd5e1;
+        background: #1e293b;
+    }
+    
+    .currency-option.active {
+        color: #f1f5f9;
+        background: #3b82f6;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    }
+    
+    .exchange-rate-info {
+        font-size: 10px;
+        color: #64748b;
+        margin-left: 8px;
+        font-style: italic;
+    }
+    
+    .date-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .summary-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 12px 16px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .summary-card-header {
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .summary-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .currency-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+    }
+    
+    .currency-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        min-width: 35px;
+    }
+    
+    .currency-value {
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+    }
+    
+    .summary-card.income .currency-value {
+        color: #10b981;
+    }
+    
+    .summary-card.expense .currency-value {
+        color: #ef4444;
+    }
+    
+    .summary-card.net .currency-value.positive {
+        color: #10b981;
+    }
+    
+    .summary-card.net .currency-value.negative {
+        color: #ef4444;
+    }
+    
+    .tabs-container {
+        margin-bottom: 16px;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #334155;
+    }
+    
+    .tab {
+        padding: 8px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #94a3b8;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        position: relative;
+        bottom: -1px;
+    }
+    
+    .tab:hover {
+        color: #cbd5e1;
+    }
+    
+    .tab.active {
+        color: #f1f5f9;
+        border-bottom-color: #3b82f6;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .chart-container {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .chart-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .chart-subtitle {
+        font-size: 10px;
+        font-weight: 500;
+        color: #94a3b8;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 220px;
+    }
+    
+    .table-container {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table-container thead th {
+        background: #0f172a;
+        padding: 8px 12px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #334155;
+    }
+    
+    .table-container thead th:last-child {
+        text-align: right;
+    }
+    
+    .table-container tbody td {
+        padding: 8px 12px;
+        font-size: 13px;
+        color: #e2e8f0;
+        border-bottom: 1px solid #334155;
+    }
+    
+    .table-container tbody td:last-child {
+        text-align: right;
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    
+    .table-container tbody tr:nth-child(odd) {
+        background: rgba(15, 23, 42, 0.4);
+    }
+    
+    .table-container tbody tr:nth-child(even) {
+        background: rgba(30, 41, 59, 0.4);
+    }
+    
+    .table-container tbody tr:hover {
+        background: rgba(51, 65, 85, 0.6);
+    }
+    
+    .table-container tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .currency-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    
+    .currency-badge.eur {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    
+    .currency-badge.usd {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+    
+    .currency-badge.rub {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a78bfa;
+    }
+    
+    .category-name {
+        font-weight: 500;
+        color: #f1f5f9;
+    }
+    
+    .account-name {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px 20px;
+        font-size: 14px;
+        color: #94a3b8;
+    }
+    
+    .income-amount {
+        color: #10b981;
+    }
+    
+    .expense-amount {
+        color: #ef4444;
+    }
+    
+    .expand-btn {
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border-radius: 3px;
+    }
+    
+    .expand-btn:hover {
+        background: #334155;
+        color: #cbd5e1;
+    }
+    
+    .expand-btn.expanded {
+        color: #3b82f6;
+    }
+    
+    .detail-row {
+        background: #0f172a !important;
+        border-left: 3px solid #334155;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .detail-row td {
+        padding: 6px 12px 6px 36px !important;
+        font-size: 12px !important;
+    }
+    
+    .detail-row:hover {
+        background: #1e293b !important;
+        border-left-color: #3b82f6;
+        transform: translateX(2px);
+    }
+    
+    .detail-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .detail-left {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+    
+    .detail-date {
+        color: #64748b;
+        font-size: 11px;
+        min-width: 80px;
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+    }
+    
+    .detail-description {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+    
+    .detail-amount {
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    
+    .prediction-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #475569;
+        border-radius: 6px;
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    
+    .prediction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    
+    .prediction-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .prediction-icon {
+        font-size: 14px;
+    }
+    
+    .prediction-period {
+        font-size: 11px;
+        color: #94a3b8;
+        background: #0f172a;
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid #334155;
+    }
+    
+    .prediction-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .prediction-item {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        padding: 12px;
+    }
+    
+    .prediction-item-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .prediction-values {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .prediction-currency-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .prediction-currency-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #64748b;
+        min-width: 35px;
+    }
+    
+    .prediction-value {
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+    }
+    
+    .prediction-value.income {
+        color: #10b981;
+    }
+    
+    .prediction-value.expense {
+        color: #ef4444;
+    }
+    
+    .prediction-value.net.positive {
+        color: #10b981;
+    }
+    
+    .prediction-value.net.negative {
+        color: #ef4444;
+    }
+    
+    .prediction-confidence {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #334155;
+    }
+    
+    .confidence-label {
+        font-size: 10px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .confidence-bar {
+        flex: 1;
+        height: 6px;
+        background: #1e293b;
+        border-radius: 3px;
+        overflow: hidden;
+        border: 1px solid #334155;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .confidence-value {
+        font-size: 11px;
+        font-weight: 600;
+        color: #f1f5f9;
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+        min-width: 35px;
+        text-align: right;
+    }
+    
+    .prediction-note {
+        font-size: 13px;
+        color: #cbd5e1;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
+    
+    .ai-insights {
+        font-size: 13px;
+        color: #e2e8f0;
+        line-height: 1.6;
+        padding: 10px 12px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+        border-left: 3px solid #3b82f6;
+    }
+    
+    .prediction-loading {
+        text-align: center;
+        padding: 20px;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+    
+    .prediction-error {
+        text-align: center;
+        padding: 12px;
+        color: #ef4444;
+        font-size: 12px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 4px;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .calculate-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    }
+    
+    .calculate-btn:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    .calculate-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+    }
+    
+    .calculate-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Magic Animation Styles */
+    .magic-animation {
+        position: relative;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .wizard {
+        font-size: 64px;
+        animation: wizardFloat 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
+    }
+    
+    .sparkles {
+        position: absolute;
+        font-size: 24px;
+        animation: sparkleRotate 3s linear infinite;
+    }
+    
+    .crystal-ball {
+        position: absolute;
+        font-size: 32px;
+        top: 70%;
+        animation: crystalPulse 1.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.6));
+    }
+    
+    @keyframes wizardFloat {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    @keyframes sparkleRotate {
+        0% {
+            transform: rotate(0deg) scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: rotate(180deg) scale(1.2);
+            opacity: 1;
+        }
+        100% {
+            transform: rotate(360deg) scale(1);
+            opacity: 0.8;
+        }
+    }
+    
+    @keyframes crystalPulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+    <div class="controls">
+        <div class="date-group">
+            <label for="date-from">From</label>
+            <input type="date" id="date-from" placeholder="Start date">
+        </div>
+        
+        <div class="date-group">
+            <label for="date-to">To</label>
+            <input type="date" id="date-to" placeholder="End date">
+        </div>
+        
+        <button onclick="applyDateFilter()">Apply</button>
+        <button onclick="clearDateFilter()">Clear (All History)</button>
+        
+        <div class="divider"></div>
+        
+        <button class="preset" onclick="setLastMonth()">Last Month</button>
+        <button class="preset" onclick="setCurrentMonth()">Current Month</button>
+        <button class="preset" onclick="setLastYear()">Last Year</button>
+        <button class="preset" onclick="setCurrentYear()">Current Year</button>
+        
+        <div class="divider"></div>
+        
+        <div class="currency-selector">
+            <span class="currency-selector-label">View:</span>
+            <div class="currency-options">
+                <button class="currency-option active" onclick="selectCurrency('ALL')">All</button>
+                <button class="currency-option" onclick="selectCurrency('EUR')">EUR</button>
+                <button class="currency-option" onclick="selectCurrency('USD')">USD</button>
+                <button class="currency-option" onclick="selectCurrency('RUB')">RUB</button>
+            </div>
+            <span class="exchange-rate-info" id="exchange-rate-info"></span>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <p>Loading data...</p>
+    </div>
+
+    <div id="dashboard-content" style="display: none;">
+        <div class="summary-grid">
+            <div class="summary-card income">
+                <div class="summary-card-header">Total Income</div>
+                <div class="summary-card-body" id="total-income"></div>
+            </div>
+            <div class="summary-card expense">
+                <div class="summary-card-header">Total Expenses</div>
+                <div class="summary-card-body" id="total-expense"></div>
+            </div>
+            <div class="summary-card net">
+                <div class="summary-card-header">Net Income</div>
+                <div class="summary-card-body" id="net-income"></div>
+            </div>
+            <div class="summary-card" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8a 100%);">
+                <div class="summary-card-header">Current Balance</div>
+                <div class="summary-card-body" id="current-balance"></div>
+            </div>
+        </div>
+
+        <!-- Financial Forecast - Temporarily Disabled
+        <div id="prediction-container" class="prediction-card">
+            <div class="prediction-header">
+                <div class="prediction-title">
+                    <span class="prediction-icon">📊</span>
+                    <span>Financial Forecast</span>
+                </div>
+                <button id="calculate-prediction-btn" class="calculate-btn">
+                    ✨ Calculate Forecast
+                </button>
+            </div>
+            
+            <div id="prediction-loading" style="display: none; text-align: center; padding: 30px 20px;">
+                <div class="magic-animation">
+                    <div class="wizard">🧙‍♂️</div>
+                    <div class="sparkles">✨✨✨</div>
+                    <div class="crystal-ball">🔮</div>
+                </div>
+                <div style="margin-top: 20px; font-size: 16px; color: #3b82f6; font-weight: 600;">
+                    <span id="magic-text">Consulting the AI crystal ball...</span>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
+                    GPT-5.2 is analyzing your financial patterns 🪄
+                </div>
+            </div>
+            
+            <div id="prediction-content" style="display: none; margin-top: 12px;"></div>
+        </div>
+        -->
+
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('income')">Income</button>
+                <button class="tab" onclick="switchTab('expense')">Expenses</button>
+            </div>
+
+            <div id="income-tab" class="tab-content active">
+                <div class="chart-title" style="margin-bottom: 12px;">Income by Category</div>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-subtitle">EUR</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-category-eur-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">USD</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-category-usd-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">RUB</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-category-rub-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-title" style="margin-bottom: 12px;">Income by Account</div>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-subtitle">EUR</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-account-eur-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">USD</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-account-usd-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">RUB</div>
+                        <div class="chart-wrapper">
+                            <canvas id="income-account-rub-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;"></th>
+                                <th>Currency</th>
+                                <th>Category</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="income-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="expense-tab" class="tab-content">
+                <div class="chart-title" style="margin-bottom: 12px;">Expenses by Category</div>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-subtitle">EUR</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-category-eur-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">USD</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-category-usd-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">RUB</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-category-rub-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-title" style="margin-bottom: 12px;">Expenses by Account</div>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-subtitle">EUR</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-account-eur-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">USD</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-account-usd-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-subtitle">RUB</div>
+                        <div class="chart-wrapper">
+                            <canvas id="expense-account-rub-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;"></th>
+                                <th>Currency</th>
+                                <th>Category</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helper function to format amounts with space as thousand separator
+function formatAmount(amount, decimals = 0) {
+    const absAmount = Math.abs(amount);
+    return absAmount.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+let dashboardData = null;
+let transactionDetails = {};
+// Store balances globally
+let accountBalances = null;
+
+let selectedCurrency = 'ALL';
+let exchangeRates = {
+    'EUR': 1,
+    'USD': 1,
+    'RUB': 1
+};
+
+function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+}
+
+function selectCurrency(currency) {
+    selectedCurrency = currency;
+    
+    // Update button states
+    document.querySelectorAll('.currency-option').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Fetch exchange rates if not ALL
+    if (currency !== 'ALL') {
+        fetchExchangeRates(currency);
+    } else {
+        // Reset to original data
+        document.getElementById('exchange-rate-info').textContent = '';
+        if (dashboardData) {
+            processDashboardData();
+        }
+    }
+}
+
+function fetchExchangeRates(targetCurrency) {
+    const rateInfo = document.getElementById('exchange-rate-info');
+    rateInfo.textContent = 'Loading rates...';
+    
+    fetch(`/dashboard/exchange-rates?base=${targetCurrency}`)
+        .then(response => response.json())
+        .then(data => {
+            exchangeRates = data.rates;
+            
+            // Show rate info
+            const rateTexts = [];
+            Object.keys(exchangeRates).forEach(curr => {
+                if (curr !== targetCurrency) {
+                    rateTexts.push(`1 ${targetCurrency} = ${exchangeRates[curr].toFixed(2)} ${curr}`);
+                }
+            });
+            rateInfo.textContent = `Rates: ${rateTexts.join(' • ')} (${data.date})`;
+            
+            // Reprocess data with new rates
+            if (dashboardData) {
+                processDashboardData();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching exchange rates:', error);
+            rateInfo.textContent = 'Rate fetch failed, using 1:1';
+            exchangeRates = { 'EUR': 1, 'USD': 1, 'RUB': 1 };
+        });
+}
+
+function convertAmount(amount, fromCurrency, toCurrency) {
+    if (selectedCurrency === 'ALL' || fromCurrency === toCurrency) {
+        return amount;
+    }
+    
+    // Convert: amount * (rate_to / rate_from)
+    // Since rates are relative to selected base currency
+    const fromRate = exchangeRates[fromCurrency] || 1;
+    const toRate = exchangeRates[toCurrency] || 1;
+    
+    return amount / fromRate * toRate;
+}
+
+function applyDateFilter() {
+    loadDashboardData();
+}
+
+function clearDateFilter() {
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    loadDashboardData();
+}
+
+function setLastMonth() {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    document.getElementById('date-from').value = formatDate(lastMonth);
+    document.getElementById('date-to').value = formatDate(lastMonthEnd);
+    loadDashboardData();
+}
+
+function setCurrentMonth() {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    document.getElementById('date-from').value = formatDate(currentMonthStart);
+    document.getElementById('date-to').value = formatDate(currentMonthEnd);
+    loadDashboardData();
+}
+
+function setLastYear() {
+    const now = new Date();
+    const lastYear = now.getFullYear() - 1;
+    
+    document.getElementById('date-from').value = `${lastYear}-01-01`;
+    document.getElementById('date-to').value = `${lastYear}-12-31`;
+    loadDashboardData();
+}
+
+function setCurrentYear() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    document.getElementById('date-from').value = `${currentYear}-01-01`;
+    document.getElementById('date-to').value = `${currentYear}-12-31`;
+    loadDashboardData();
+}
+
+function loadDashboardData() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('dashboard-content').style.display = 'none';
+    
+    let url = '/dashboard/data?';
+    const params = [];
+    
+    if (dateFrom) {
+        params.push('date_from=' + dateFrom);
+    }
+    if (dateTo) {
+        params.push('date_to=' + dateTo);
+    }
+    
+    url += params.join('&');
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            dashboardData = data;
+            processTransactionDetails(data.transactions);
+            processDashboardData();
+            loadPrediction();
+            loadBalances(); // Load balances
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error loading dashboard data:', error);
+            document.getElementById('loading').innerHTML = '<p style="color: #ef4444;">Error loading data</p>';
+        });
+}
+
+function loadBalances() {
+    fetch('/dashboard/balances')
+        .then(response => response.json())
+        .then(data => {
+            if (data.balances) {
+                accountBalances = data.balances; // Store globally
+                displayBalances(data.balances);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading balances:', error);
+            document.getElementById('current-balance').innerHTML = '<div style="color: #ef4444;">Error loading</div>';
+        });
+}
+
+function loadPrediction() {
+    // Do nothing - prediction is now manual only
+    // Keep the container visible but show placeholder
+}
+
+function startPredictionCalculation() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    
+    if (!dateFrom || !dateTo) {
+        alert('Please select a date range first!');
+        return;
+    }
+    
+    // Hide content, show loading animation
+    document.getElementById('prediction-content').style.display = 'none';
+    document.getElementById('prediction-loading').style.display = 'block';
+    document.getElementById('calculate-prediction-btn').disabled = true;
+    
+    // Funny magic texts
+    const magicTexts = [
+        'Consulting the AI crystal ball...',
+        'Summoning financial spirits... 👻',
+        'Reading tea leaves... 🍵',
+        'Casting prediction spells... 🪄',
+        'Channeling market energies... ⚡',
+        'Decoding the universe\'s secrets... 🌌',
+        'Asking the magic 8-ball... 🎱',
+        'Shuffling tarot cards... 🃏',
+        'Polishing the crystal ball... ✨',
+        'Brewing wisdom potion... 🧪'
+    ];
+    
+    let textIndex = 0;
+    const magicTextEl = document.getElementById('magic-text');
+    
+    // Rotate through funny texts
+    const textInterval = setInterval(() => {
+        textIndex = (textIndex + 1) % magicTexts.length;
+        magicTextEl.textContent = magicTexts[textIndex];
+    }, 2000);
+    
+    let url = `/dashboard/prediction?date_from=${dateFrom}&date_to=${dateTo}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(textInterval);
+            
+            console.log('Prediction response:', data);
+            
+            if (data.error) {
+                document.getElementById('prediction-loading').style.display = 'none';
+                document.getElementById('prediction-content').style.display = 'block';
+                document.getElementById('prediction-content').innerHTML = `<div class="prediction-error">${data.error}</div>`;
+                document.getElementById('calculate-prediction-btn').disabled = false;
+                return;
+            }
+            
+            // Short delay to show completion
+            setTimeout(() => {
+                console.log('Hiding loading, showing content');
+                const contentEl = document.getElementById('prediction-content');
+                const loadingEl = document.getElementById('prediction-loading');
+                
+                console.log('Content element:', contentEl);
+                console.log('Loading element:', loadingEl);
+                
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+                
+                console.log('Content display:', contentEl.style.display);
+                console.log('Calling renderPrediction');
+                renderPrediction(data);
+                document.getElementById('calculate-prediction-btn').disabled = false;
+            }, 500);
+        })
+        .catch(error => {
+            clearInterval(textInterval);
+            console.error('Error loading prediction:', error);
+            document.getElementById('prediction-loading').style.display = 'none';
+            document.getElementById('prediction-content').style.display = 'block';
+            document.getElementById('prediction-content').innerHTML = '<div class="prediction-error">Error calculating forecast. Please try again.</div>';
+            document.getElementById('calculate-prediction-btn').disabled = false;
+        });
+}
+
+function renderPrediction(data) {
+    console.log('renderPrediction called with data:', data);
+    
+    const predictionContent = document.getElementById('prediction-content');
+    
+    if (!predictionContent) {
+        console.error('prediction-content element not found!');
+        return;
+    }
+    
+    if (!data || !data.predictions) {
+        console.error('Invalid prediction data:', data);
+        predictionContent.innerHTML = '<div class="prediction-error">Invalid prediction data received</div>';
+        return;
+    }
+    
+    console.log('Predictions data valid, starting render...');
+    
+    // Set period text (optional - only if element exists)
+    const predictionPeriod = document.getElementById('prediction-period');
+    if (predictionPeriod) {
+        const months = data.period_months;
+        const periodText = months < 1 ? `${data.period_days} days` : 
+                          months === 1 ? '1 month' : 
+                          `${months} months`;
+        predictionPeriod.textContent = `Next ${periodText}`;
+    }
+    
+    const currencies = ['EUR', 'USD', 'RUB'];
+    const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+    const formatAmt = (amt) => formatAmount(amt, 0);
+    
+    // Calculate average confidence
+    let totalConfidence = 0;
+    let currencyCount = 0;
+    currencies.forEach(curr => {
+        if (data.predictions[curr]) {
+            totalConfidence += data.predictions[curr].confidence;
+            currencyCount++;
+        }
+    });
+    const avgConfidence = currencyCount > 0 ? Math.round(totalConfidence / currencyCount) : 0;
+    
+    // Format dates for display
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+    
+    // Add period explanation box
+    let html = '<div class="period-explanation" style="background: #1e3a5f; border-left: 3px solid #3b82f6; padding: 10px 14px; margin-bottom: 14px; border-radius: 4px; font-size: 12px;">';
+    html += '<div style="color: #93c5fd; font-weight: 600; margin-bottom: 4px;">📅 Prediction Details</div>';
+    html += `<div style="color: #cbd5e1; line-height: 1.6;">`;
+    html += `<strong style="color: #3b82f6;">Forecasting:</strong> ${formatDate(data.historical_from)} to ${formatDate(data.historical_to)}<br>`;
+    
+    // Calculate the historical period end date (day before prediction starts)
+    const predictionStart = new Date(data.historical_from);
+    const historyEnd = new Date(predictionStart);
+    historyEnd.setDate(historyEnd.getDate() - 1);
+    
+    html += `<strong style="color: #3b82f6;">Based on data:</strong> All transactions before ${formatDate(historyEnd.toISOString().split('T')[0])}<br>`;
+    html += `<strong style="color: #3b82f6;">Method:</strong> ${data.method === 'ai' ? 'GPT-5.2 AI Analysis' : 'Statistical Averaging'}`;
+    html += '</div></div>';
+    
+    html += '<div class="prediction-grid">';
+    
+    // Predicted Income
+    html += '<div class="prediction-item">';
+    html += '<div class="prediction-item-label">Expected Income</div>';
+    html += '<div class="prediction-values">';
+    currencies.forEach(curr => {
+        const pred = data.predictions[curr];
+        if (pred && pred.predicted_income > 0) {
+            const trend = pred.income_trend;
+            const trendIcon = trend > 5 ? ' ↗' : trend < -5 ? ' ↘' : '';
+            html += `
+                <div class="prediction-currency-row">
+                    <span class="prediction-currency-label">${curr}</span>
+                    <span class="prediction-value income">${symbols[curr]}${formatAmt(pred.predicted_income)}${trendIcon}</span>
+                </div>
+            `;
+        }
+    });
+    html += '</div></div>';
+    
+    // Predicted Expense
+    html += '<div class="prediction-item">';
+    html += '<div class="prediction-item-label">Expected Expenses</div>';
+    html += '<div class="prediction-values">';
+    currencies.forEach(curr => {
+        const pred = data.predictions[curr];
+        if (pred && pred.predicted_expense > 0) {
+            const trend = pred.expense_trend;
+            const trendIcon = trend > 5 ? ' ↗' : trend < -5 ? ' ↘' : '';
+            html += `
+                <div class="prediction-currency-row">
+                    <span class="prediction-currency-label">${curr}</span>
+                    <span class="prediction-value expense">${symbols[curr]}${formatAmt(pred.predicted_expense)}${trendIcon}</span>
+                </div>
+            `;
+        }
+    });
+    html += '</div></div>';
+    
+    // Predicted Net
+    html += '<div class="prediction-item">';
+    html += '<div class="prediction-item-label">Expected Net</div>';
+    html += '<div class="prediction-values">';
+    currencies.forEach(curr => {
+        const pred = data.predictions[curr];
+        if (pred && (pred.predicted_income > 0 || pred.predicted_expense > 0)) {
+            const netClass = pred.predicted_net >= 0 ? 'positive' : 'negative';
+            const sign = pred.predicted_net >= 0 ? '' : '';
+            html += `
+                <div class="prediction-currency-row">
+                    <span class="prediction-currency-label">${curr}</span>
+                    <span class="prediction-value net ${netClass}">${sign}${symbols[curr]}${formatAmt(pred.predicted_net)}</span>
+                </div>
+            `;
+        }
+    });
+    html += '</div></div>';
+    
+    html += '</div>'; // end prediction-grid
+    
+    // Confidence indicator
+    html += '<div class="prediction-confidence">';
+    html += '<span class="confidence-label">Confidence</span>';
+    html += '<div class="confidence-bar">';
+    html += `<div class="confidence-fill" style="width: ${avgConfidence}%"></div>`;
+    html += '</div>';
+    html += `<span class="confidence-value">${avgConfidence}%</span>`;
+    html += '</div>';
+    
+    // AI Insights (if available)
+    if (data.ai_insights) {
+        html += '<div class="ai-insights" style="margin-top: 12px;">';
+        html += '<strong style="color: #3b82f6;">🤖 AI Insights:</strong><br>';
+        html += data.ai_insights;
+        html += '</div>';
+    }
+    
+    // Note
+    html += '<div class="prediction-note">';
+    if (data.method === 'ai') {
+        html += 'Powered by OpenAI GPT-5.2 with advanced statistical analysis. ';
+    } else {
+        html += 'Forecast based on statistical analysis. ';
+    }
+    if (avgConfidence < 40) {
+        html += 'Low confidence: Limited historical data or high variability.';
+    } else if (avgConfidence < 70) {
+        html += 'Moderate confidence: Some variability in historical data.';
+    } else {
+        html += 'High confidence: Consistent historical patterns detected.';
+    }
+    html += '</div>';
+    
+    console.log('Setting prediction HTML, length:', html.length);
+    predictionContent.innerHTML = html;
+    console.log('Prediction content displayed successfully');
+}
+
+function processTransactionDetails(transactions) {
+    transactionDetails = {};
+    
+    transactions.forEach(tx => {
+        const type = tx.transaction_type.toLowerCase() === 'deposit' ? 'Income' : 'Expense';
+        const key = `${type}|${tx.currency}|${tx.category}|${tx.account_name}`;
+        
+        if (!transactionDetails[key]) {
+            transactionDetails[key] = [];
+        }
+        
+        transactionDetails[key].push({
+            date: tx.date,
+            description: tx.description,
+            amount: parseFloat(tx.amount),
+            journal_id: tx.journal_id
+        });
+    });
+    
+    // Sort each group by date descending
+    Object.keys(transactionDetails).forEach(key => {
+        transactionDetails[key].sort((a, b) => new Date(b.date) - new Date(a.date));
+    });
+}
+
+function processDashboardData() {
+    const data = dashboardData.data;
+    
+    const incomeData = {};
+    const expenseData = {};
+    const totals = {
+        income: { RUB: 0, USD: 0, EUR: 0 },
+        expense: { RUB: 0, USD: 0, EUR: 0 }
+    };
+    
+    // If single currency mode, aggregate everything into that currency
+    if (selectedCurrency !== 'ALL') {
+        incomeData[selectedCurrency] = {};
+        expenseData[selectedCurrency] = {};
+    }
+    
+    data.forEach(row => {
+        const category = row.category;
+        const account = row.account_name;
+        const type = row.transaction_type.toLowerCase() === 'deposit' ? 'Income' : 'Expense';
+        const sourceCurrency = row.currency;
+        let amount = parseFloat(row.total_amount);
+        
+        // Convert to target currency if needed
+        let targetCurrency = sourceCurrency;
+        if (selectedCurrency !== 'ALL') {
+            amount = convertAmount(amount, sourceCurrency, selectedCurrency);
+            targetCurrency = selectedCurrency;
+        }
+        
+        const targetData = type === 'Income' ? incomeData : expenseData;
+        
+        if (!targetData[targetCurrency]) {
+            targetData[targetCurrency] = {};
+        }
+        if (!targetData[targetCurrency][category]) {
+            targetData[targetCurrency][category] = {};
+        }
+        
+        // If account already exists for this category/currency, sum the amounts
+        if (targetData[targetCurrency][category][account]) {
+            targetData[targetCurrency][category][account] += amount;
+        } else {
+            targetData[targetCurrency][category][account] = amount;
+        }
+        
+        if (type === 'Income') {
+            totals.income[targetCurrency] += amount;
+        } else {
+            totals.expense[targetCurrency] += amount;
+        }
+    });
+    
+    console.log('Totals calculated:', totals);
+    
+    updateSummaryCards(totals);
+    
+    // Update balances if already loaded
+    if (accountBalances) {
+        displayBalances(accountBalances);
+    }
+    
+    buildTable('income-table-body', incomeData, 'income');
+    buildTable('expense-table-body', expenseData, 'expense');
+    buildCharts(incomeData, expenseData);
+}
+
+function updateSummaryCards(totals) {
+    const formatAmt = (amt) => formatAmount(amt, 0);
+    
+    const currencies = selectedCurrency === 'ALL' ? ['RUB', 'USD', 'EUR'] : [selectedCurrency];
+    const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+    
+    // Income
+    let incomeHTML = '';
+    currencies.forEach(curr => {
+        if (totals.income[curr] > 0 || selectedCurrency === 'ALL') {
+            incomeHTML += `
+                <div class="currency-row">
+                    <span class="currency-label">${curr}</span>
+                    <span class="currency-value">${symbols[curr]}${formatAmt(totals.income[curr])}</span>
+                </div>
+            `;
+        }
+    });
+    document.getElementById('total-income').innerHTML = incomeHTML || '<div class="currency-row"><span style="color: #64748b;">No data</span></div>';
+    
+    // Expense
+    let expenseHTML = '';
+    currencies.forEach(curr => {
+        if (totals.expense[curr] > 0 || selectedCurrency === 'ALL') {
+            expenseHTML += `
+                <div class="currency-row">
+                    <span class="currency-label">${curr}</span>
+                    <span class="currency-value">${symbols[curr]}${formatAmt(totals.expense[curr])}</span>
+                </div>
+            `;
+        }
+    });
+    document.getElementById('total-expense').innerHTML = expenseHTML || '<div class="currency-row"><span style="color: #64748b;">No data</span></div>';
+    
+    // Net
+    let netHTML = '';
+    currencies.forEach(curr => {
+        if (totals.income[curr] > 0 || totals.expense[curr] > 0 || selectedCurrency === 'ALL') {
+            const net = totals.income[curr] - totals.expense[curr];
+            const sign = net >= 0 ? 'positive' : 'negative';
+            netHTML += `
+                <div class="currency-row">
+                    <span class="currency-label">${curr}</span>
+                    <span class="currency-value ${sign}">${symbols[curr]}${formatAmt(net)}</span>
+                </div>
+            `;
+        }
+    });
+    document.getElementById('net-income').innerHTML = netHTML || '<div class="currency-row"><span style="color: #64748b;">No data</span></div>';
+}
+
+function displayBalances(balances) {
+    const formatAmt = (amt) => formatAmount(amt, 0);
+    const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+    
+    let balanceHTML = '';
+    
+    if (selectedCurrency === 'ALL') {
+        // Show all three currencies
+        const currencies = ['EUR', 'USD', 'RUB'];
+        currencies.forEach(curr => {
+            const balance = balances[curr] || 0;
+            const sign = balance >= 0 ? 'positive' : 'negative';
+            balanceHTML += `
+                <div class="currency-row">
+                    <span class="currency-label">${curr}</span>
+                    <span class="currency-value ${sign}">${symbols[curr]}${formatAmt(Math.abs(balance))}</span>
+                </div>
+            `;
+        });
+    } else {
+        // Convert all balances to selected currency and sum them
+        let totalBalance = 0;
+        ['EUR', 'USD', 'RUB'].forEach(curr => {
+            const balance = balances[curr] || 0;
+            totalBalance += convertAmount(balance, curr, selectedCurrency);
+        });
+        
+        const sign = totalBalance >= 0 ? 'positive' : 'negative';
+        balanceHTML = `
+            <div class="currency-row">
+                <span class="currency-label">${selectedCurrency}</span>
+                <span class="currency-value ${sign}" style="font-size: 24px;">${symbols[selectedCurrency]}${formatAmt(Math.abs(totalBalance))}</span>
+            </div>
+        `;
+    }
+    
+    document.getElementById('current-balance').innerHTML = balanceHTML;
+}
+
+function buildTable(tbodyId, data, type) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    
+    const formatAmt = (amt) => formatAmount(amt, 0);
+    const getCurrencySymbol = (currency) => {
+        const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+        return symbols[currency] || currency;
+    };
+    
+    const currencyOrder = ['EUR', 'USD', 'RUB'];
+    const sortedCurrencies = currencyOrder.filter(c => data[c]);
+    
+    let rowIndex = 0;
+    
+    sortedCurrencies.forEach(currency => {
+        const categories = data[currency];
+        
+        // Build array of all rows for this currency to sort by amount
+        const rows = [];
+        Object.keys(categories).forEach(category => {
+            const accounts = categories[category];
+            Object.keys(accounts).forEach(account => {
+                rows.push({
+                    category: category,
+                    account: account,
+                    amount: accounts[account]
+                });
+            });
+        });
+        
+        // Sort by amount descending within currency
+        rows.sort((a, b) => b.amount - a.amount);
+        
+        // Append sorted rows
+        rows.forEach(item => {
+            const rowId = `${type}-row-${rowIndex}`;
+            const typeCapitalized = type.charAt(0).toUpperCase() + type.slice(1);
+            const detailKey = `${typeCapitalized}|${currency}|${item.category}|${item.account}`;
+            const hasDetails = transactionDetails[detailKey] && transactionDetails[detailKey].length > 0;
+            
+            const row = document.createElement('tr');
+            row.id = rowId;
+            const amountClass = type === 'income' ? 'income-amount' : 'expense-amount';
+            
+            row.innerHTML = `
+                <td style="width: 30px;">
+                    ${hasDetails ? `<button class="expand-btn" onclick="toggleDetails('${rowId}', '${detailKey}', '${type}', '${currency}')">+</button>` : '<span style="display: inline-block; width: 24px;"></span>'}
+                </td>
+                <td><span class="currency-badge ${currency.toLowerCase()}">${currency}</span></td>
+                <td><span class="category-name">${item.category}</span></td>
+                <td><span class="account-name">${item.account}</span></td>
+                <td class="${amountClass}">${getCurrencySymbol(currency)}${formatAmt(item.amount)}</td>
+            `;
+            
+            tbody.appendChild(row);
+            rowIndex++;
+        });
+    });
+}
+
+function toggleDetails(rowId, detailKey, type, currency) {
+    const row = document.getElementById(rowId);
+    const btn = row.querySelector('.expand-btn');
+    const tbody = row.parentElement;
+    
+    // Check if already expanded
+    const existingDetails = row.nextElementSibling;
+    if (existingDetails && existingDetails.classList.contains('detail-row')) {
+        // Collapse - remove ALL detail rows
+        let nextRow = row.nextElementSibling;
+        while (nextRow && nextRow.classList.contains('detail-row')) {
+            const toRemove = nextRow;
+            nextRow = nextRow.nextElementSibling;
+            toRemove.remove();
+        }
+        btn.textContent = '+';
+        btn.classList.remove('expanded');
+        return;
+    }
+    
+    // Expand
+    btn.textContent = '−';
+    btn.classList.add('expanded');
+    
+    const details = transactionDetails[detailKey] || [];
+    const formatAmt = (amt) => formatAmount(amt, 2);
+    const getCurrencySymbol = (currency) => {
+        const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+        return symbols[currency] || currency;
+    };
+    const amountClass = type === 'income' ? 'income-amount' : 'expense-amount';
+    
+    // Create detail rows
+    details.forEach(tx => {
+        const detailRow = document.createElement('tr');
+        detailRow.classList.add('detail-row');
+        detailRow.style.cursor = 'pointer';
+        detailRow.title = 'Click to view transaction';
+        
+        const formattedDate = new Date(tx.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit'
+        });
+        
+        detailRow.innerHTML = `
+            <td colspan="5">
+                <div class="detail-content">
+                    <div class="detail-left">
+                        <span class="detail-date">${formattedDate}</span>
+                        <span class="detail-description">${tx.description || '(no description)'}</span>
+                    </div>
+                    <span class="detail-amount ${amountClass}">${getCurrencySymbol(currency)}${formatAmt(tx.amount)}</span>
+                </div>
+            </td>
+        `;
+        
+        // Make row clickable - open in new tab
+        detailRow.addEventListener('click', () => {
+            window.open(`/transactions/show/${tx.journal_id}`, '_blank');
+        });
+        
+        // Insert after the main row (or after other detail rows)
+        const lastDetailRow = getLastDetailRow(row);
+        lastDetailRow.after(detailRow);
+    });
+}
+
+function getLastDetailRow(row) {
+    let current = row;
+    while (current.nextElementSibling && current.nextElementSibling.classList.contains('detail-row')) {
+        current = current.nextElementSibling;
+    }
+    return current;
+}
+
+// Chart instances
+let chartInstances = {};
+
+function buildCharts(incomeData, expenseData) {
+    // Destroy existing charts if they exist
+    Object.keys(chartInstances).forEach(key => {
+        if (chartInstances[key]) {
+            chartInstances[key].destroy();
+        }
+    });
+    chartInstances = {};
+    
+    const currencies = ['EUR', 'USD', 'RUB'];
+    
+    // Build income charts for each currency
+    currencies.forEach(currency => {
+        buildCategoryChartForCurrency('income-category-' + currency.toLowerCase() + '-chart', incomeData, currency, 'income');
+        buildAccountChartForCurrency('income-account-' + currency.toLowerCase() + '-chart', incomeData, currency, 'income');
+    });
+    
+    // Build expense charts for each currency
+    currencies.forEach(currency => {
+        buildCategoryChartForCurrency('expense-category-' + currency.toLowerCase() + '-chart', expenseData, currency, 'expense');
+        buildAccountChartForCurrency('expense-account-' + currency.toLowerCase() + '-chart', expenseData, currency, 'expense');
+    });
+}
+
+function buildCategoryChartForCurrency(canvasId, data, currency, type) {
+    // Check if currency exists in data
+    if (!data[currency]) {
+        // Show "No data" message
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    const categoryTotals = {};
+    
+    // Aggregate by category for this currency only
+    Object.keys(data[currency]).forEach(category => {
+        categoryTotals[category] = 0;
+        Object.keys(data[currency][category]).forEach(account => {
+            categoryTotals[category] += data[currency][category][account];
+        });
+    });
+    
+    // Sort by amount descending and get top 8
+    const sortedCategories = Object.entries(categoryTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+    
+    if (sortedCategories.length === 0) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    const labels = sortedCategories.map(item => item[0]);
+    const values = sortedCategories.map(item => item[1]);
+    
+    // Color palette
+    const colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#ec4899', '#14b8a6', '#f97316'
+    ];
+    
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderColor: '#1e293b',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#cbd5e1',
+                        font: {
+                            size: 9
+                        },
+                        padding: 4,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    padding: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = formatAmount(context.parsed, 0);
+                            const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+                            return label + ': ' + symbols[currency] + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    chartInstances[canvasId] = chart;
+}
+
+function buildAccountChartForCurrency(canvasId, data, currency, type) {
+    // Check if currency exists in data
+    if (!data[currency]) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    const accountTotals = {};
+    
+    // Aggregate by account for this currency only
+    Object.keys(data[currency]).forEach(category => {
+        Object.keys(data[currency][category]).forEach(account => {
+            if (!accountTotals[account]) {
+                accountTotals[account] = 0;
+            }
+            accountTotals[account] += data[currency][category][account];
+        });
+    });
+    
+    // Sort by amount descending and get top 8
+    const sortedAccounts = Object.entries(accountTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+    
+    if (sortedAccounts.length === 0) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    const labels = sortedAccounts.map(item => item[0]);
+    const values = sortedAccounts.map(item => item[1]);
+    
+    // Color based on type
+    const color = type === 'income' ? '#10b981' : '#ef4444';
+    
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: type === 'income' ? 'Income' : 'Expenses',
+                data: values,
+                backgroundColor: color,
+                borderColor: color,
+                borderWidth: 0,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    padding: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const value = formatAmount(context.parsed.y, 0);
+                            const symbols = { RUB: '₽', USD: '$', EUR: '€' };
+                            return symbols[currency] + value;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#334155',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 9
+                        },
+                        callback: function(value) {
+                            // Compact format with space separator
+                            if (value >= 1000000) {
+                                return formatAmount(value / 1000000, 1) + 'M';
+                            } else if (value >= 1000) {
+                                return formatAmount(value / 1000, 0) + 'k';
+                            }
+                            return formatAmount(value, 0);
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 8
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+    
+    chartInstances[canvasId] = chart;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates to current year
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    document.getElementById('date-from').value = currentYear + '-01-01';
+    document.getElementById('date-to').value = currentYear + '-12-31';
+    
+    // Add event listener for forecast button (currently disabled)
+    // document.getElementById('calculate-prediction-btn').addEventListener('click', startPredictionCalculation);
+    
+    loadDashboardData();
+});
+</script>
+</body>
+</html>

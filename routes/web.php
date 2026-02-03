@@ -114,6 +114,11 @@ Route::group(
     Route::get('/flash', ['uses' => 'DebugController@testFlash', 'as' => 'test-flash']);
     Route::get('/home', ['uses' => 'HomeController@index', 'as' => 'home']);
     Route::post('/daterange', ['uses' => 'HomeController@dateRange', 'as' => 'daterange']);
+Route::get('/dashboard', ['uses' => 'HomeController@dashboard', 'as' => 'dashboard']);
+Route::get('/dashboard/data', ['uses' => 'HomeController@dashboardData', 'as' => 'dashboard.data']);
+Route::get('/dashboard/prediction', ['uses' => 'HomeController@dashboardPrediction', 'as' => 'dashboard.prediction']);
+Route::get('/dashboard/exchange-rates', ['uses' => 'HomeController@getExchangeRates', 'as' => 'dashboard.rates']);
+Route::get('/dashboard/balances', ['uses' => 'HomeController@getAccountBalances', 'as' => 'dashboard.balances']);
 }
 );
 
