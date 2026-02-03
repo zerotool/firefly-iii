@@ -98,6 +98,12 @@
         align-items: center;
     }
     
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    
     .controls .divider {
         width: 1px;
         height: 24px;
@@ -806,13 +812,21 @@
             gap: 8px;
         }
         
+        .date-group {
+            width: 100%;
+        }
+        
         .date-group label {
             font-size: 12px;
+            display: block;
+            width: 100%;
         }
         
         .controls input[type="date"] {
             width: 100%;
             min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         /* Preset buttons: wrap to multiple rows */
@@ -897,20 +911,34 @@
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin: 0 -12px; /* Extend to screen edges */
+            padding: 0 12px;
         }
         
         .table-container table {
-            min-width: 600px;
+            min-width: 100%; /* Remove fixed min-width for mobile */
+            width: 100%;
         }
         
         .table-container thead th {
-            padding: 6px 8px;
+            padding: 6px 4px;
             font-size: 10px;
+            white-space: nowrap;
         }
         
         .table-container tbody td {
-            padding: 6px 8px;
-            font-size: 12px;
+            padding: 6px 4px;
+            font-size: 11px;
+        }
+        
+        /* Make table columns more compact on mobile */
+        .table-container tbody td:first-child {
+            min-width: 60px; /* Category/Account column */
+        }
+        
+        .table-container tbody td:last-child {
+            min-width: 70px; /* Amount column */
+            text-align: right;
         }
         
         /* Balance widget */
@@ -971,9 +999,27 @@
             gap: 10px;
         }
         
+        .controls button {
+            font-size: 11px;
+            padding: 7px 10px;
+            white-space: nowrap;
+        }
+        
         .controls button.preset {
             font-size: 11px;
             padding: 7px 8px;
+        }
+        
+        /* Action buttons group */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            min-width: 0;
         }
         
         /* Tabs: stack if needed */
@@ -1004,14 +1050,52 @@
         }
         
         /* Table: more compact */
+        .table-container {
+            margin: 0 -8px; /* Extend to screen edges on small phones */
+            padding: 0 8px;
+        }
+        
+        .table-container table {
+            font-size: 11px;
+        }
+        
         .table-container thead th {
-            padding: 5px 6px;
+            padding: 4px 2px;
             font-size: 9px;
         }
         
+        .table-container thead th:first-child {
+            width: 20px !important;
+            padding: 4px 1px;
+        }
+        
         .table-container tbody td {
-            padding: 5px 6px;
+            padding: 4px 2px;
+            font-size: 10px;
+        }
+        
+        .table-container tbody td:first-child {
+            width: 20px;
+            padding: 4px 1px;
+        }
+        
+        .table-container tbody td:nth-child(2) {
+            min-width: 50px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .table-container tbody td:last-child {
+            min-width: 60px;
             font-size: 11px;
+        }
+        
+        /* Hide Currency column on very small screens */
+        .table-container thead th:nth-child(2),
+        .table-container tbody td:nth-child(2) {
+            display: none;
         }
         
         /* Expand button */
@@ -1102,6 +1186,11 @@
             padding: 8px;
         }
         
+        .controls button {
+            font-size: 10px;
+            padding: 6px 8px;
+        }
+        
         .controls button.preset {
             font-size: 10px;
             padding: 6px;
@@ -1119,6 +1208,17 @@
             padding: 6px 10px;
             font-size: 10px;
         }
+        
+        .table-container {
+            margin: 0 -6px;
+            padding: 0 6px;
+        }
+        
+        .table-container thead th,
+        .table-container tbody td {
+            font-size: 9px;
+            padding: 3px 1px;
+        }
     }
 </style>
 </head>
@@ -1135,8 +1235,10 @@
             <input type="date" id="date-to" placeholder="End date">
         </div>
         
-        <button onclick="applyDateFilter()">Apply</button>
-        <button onclick="clearDateFilter()">Clear (All History)</button>
+        <div class="action-buttons">
+            <button onclick="applyDateFilter()">Apply</button>
+            <button onclick="clearDateFilter()">Clear (All History)</button>
+        </div>
         
         <div class="divider"></div>
         
