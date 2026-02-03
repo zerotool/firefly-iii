@@ -92,6 +92,12 @@
         border-color: #475569;
     }
     
+    .preset-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    
     .controls .divider {
         width: 1px;
         height: 24px;
@@ -751,6 +757,369 @@
             opacity: 1;
         }
     }
+    
+    /* ===== MOBILE RESPONSIVE STYLES ===== */
+    
+    /* Tablet and small desktop - 2 columns for charts and summary */
+    @media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .prediction-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* Tablet portrait - 2 columns for summary, single column for charts */
+    @media (max-width: 992px) {
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .prediction-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Mobile landscape and large phones */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 12px;
+        }
+        
+        /* Controls: Stack vertically on mobile */
+        .controls {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            padding: 12px;
+        }
+        
+        .date-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        
+        .date-group label {
+            font-size: 12px;
+        }
+        
+        .controls input[type="date"] {
+            width: 100%;
+            min-width: 0;
+        }
+        
+        /* Preset buttons: wrap to multiple rows */
+        .preset-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .controls button.preset {
+            flex: 1 1 calc(50% - 3px);
+            min-width: 0;
+            font-size: 12px;
+            padding: 8px 10px;
+        }
+        
+        .controls .divider {
+            width: 100%;
+            height: 1px;
+            margin: 0;
+        }
+        
+        /* Currency selector: stack on very small screens */
+        .currency-selector {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            margin-left: 0;
+        }
+        
+        .currency-options {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .currency-option {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .exchange-rate-info {
+            margin-left: 0;
+            text-align: center;
+        }
+        
+        /* Summary cards: 2 columns on mobile */
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .summary-card {
+            padding: 10px 12px;
+        }
+        
+        .summary-card-header {
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+        
+        .currency-value {
+            font-size: 13px;
+        }
+        
+        /* Tabs: smaller font */
+        .tab {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        
+        /* Charts: full width on mobile */
+        .charts-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .chart-wrapper {
+            height: 200px;
+        }
+        
+        /* Tables: make scrollable horizontally */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-container table {
+            min-width: 600px;
+        }
+        
+        .table-container thead th {
+            padding: 6px 8px;
+            font-size: 10px;
+        }
+        
+        .table-container tbody td {
+            padding: 6px 8px;
+            font-size: 12px;
+        }
+        
+        /* Balance widget */
+        .balance-widget {
+            padding: 12px;
+        }
+        
+        .balance-title {
+            font-size: 11px;
+        }
+        
+        .balance-grid {
+            gap: 8px;
+        }
+    }
+    
+    /* Mobile portrait - iPhone and smaller phones */
+    @media (max-width: 576px) {
+        body {
+            font-size: 13px;
+        }
+        
+        .dashboard-container {
+            padding: 8px;
+        }
+        
+        /* Summary cards: single column on very small screens */
+        .summary-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .summary-card {
+            padding: 10px;
+        }
+        
+        .summary-card-header {
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+        
+        .currency-row {
+            padding: 3px 0;
+        }
+        
+        .currency-label {
+            font-size: 10px;
+            min-width: 30px;
+        }
+        
+        .currency-value {
+            font-size: 12px;
+        }
+        
+        /* Controls: even more compact */
+        .controls {
+            padding: 10px;
+            gap: 10px;
+        }
+        
+        .controls button.preset {
+            font-size: 11px;
+            padding: 7px 8px;
+        }
+        
+        /* Tabs: stack if needed */
+        .tabs {
+            gap: 2px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab {
+            padding: 8px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        /* Charts: smaller height on mobile */
+        .chart-wrapper {
+            height: 180px;
+        }
+        
+        .chart-title {
+            font-size: 11px;
+        }
+        
+        .chart-subtitle {
+            font-size: 9px;
+        }
+        
+        /* Table: more compact */
+        .table-container thead th {
+            padding: 5px 6px;
+            font-size: 9px;
+        }
+        
+        .table-container tbody td {
+            padding: 5px 6px;
+            font-size: 11px;
+        }
+        
+        /* Expand button */
+        .expand-btn {
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+        }
+        
+        /* Detail rows */
+        .detail-row td {
+            padding: 4px 6px !important;
+        }
+        
+        .detail-cell {
+            padding: 6px;
+        }
+        
+        .detail-item {
+            font-size: 10px;
+        }
+        
+        .detail-description {
+            font-size: 11px;
+        }
+        
+        .detail-amount {
+            font-size: 12px;
+        }
+        
+        /* Balance widget */
+        .balance-widget {
+            padding: 10px;
+        }
+        
+        .balance-title {
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .balance-item-label {
+            font-size: 9px;
+        }
+        
+        .balance-value {
+            font-size: 13px;
+        }
+        
+        .balance-value.positive,
+        .balance-value.negative {
+            font-size: 12px;
+        }
+        
+        /* Prediction section */
+        .prediction-container {
+            padding: 10px;
+        }
+        
+        .prediction-header {
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .prediction-grid {
+            gap: 8px;
+        }
+        
+        .prediction-item {
+            padding: 10px;
+        }
+        
+        .prediction-item-label {
+            font-size: 9px;
+        }
+        
+        .prediction-value {
+            font-size: 12px;
+        }
+    }
+    
+    /* Extra small phones - iPhone SE, etc */
+    @media (max-width: 375px) {
+        .dashboard-container {
+            padding: 6px;
+        }
+        
+        .controls {
+            padding: 8px;
+        }
+        
+        .controls button.preset {
+            font-size: 10px;
+            padding: 6px;
+        }
+        
+        .summary-card {
+            padding: 8px;
+        }
+        
+        .chart-wrapper {
+            height: 160px;
+        }
+        
+        .tab {
+            padding: 6px 10px;
+            font-size: 10px;
+        }
+    }
 </style>
 </head>
 <body>
@@ -771,10 +1140,12 @@
         
         <div class="divider"></div>
         
-        <button class="preset" onclick="setLastMonth()">Last Month</button>
-        <button class="preset" onclick="setCurrentMonth()">Current Month</button>
-        <button class="preset" onclick="setLastYear()">Last Year</button>
-        <button class="preset" onclick="setCurrentYear()">Current Year</button>
+        <div class="preset-group">
+            <button class="preset" onclick="setLastMonth()">Last Month</button>
+            <button class="preset" onclick="setCurrentMonth()">Current Month</button>
+            <button class="preset" onclick="setLastYear()">Last Year</button>
+            <button class="preset" onclick="setCurrentYear()">Current Year</button>
+        </div>
         
         <div class="divider"></div>
         
