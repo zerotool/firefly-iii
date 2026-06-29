@@ -45,9 +45,22 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function map(): void
     {
+        $this->mapHermesFinanceRoutes();
+
         $this->mapApiRoutes();
 
         $this->mapWebRoutes();
+    }
+
+    /**
+     * Define the Hermes finance operation API routes.
+     */
+    protected function mapHermesFinanceRoutes(): void
+    {
+        Route::prefix('api/v1/hermes/finance')
+             ->middleware(['hermes.finance', 'bindings', 'throttle:30,1'])
+             ->namespace($this->namespace)
+             ->group(base_path('routes/hermes_finance.php'));
     }
 
     /**

@@ -26,6 +26,7 @@ use FireflyIII\Http\Middleware\Authenticate;
 use FireflyIII\Http\Middleware\AuthenticateTwoFactor;
 use FireflyIII\Http\Middleware\Binder;
 use FireflyIII\Http\Middleware\EncryptCookies;
+use FireflyIII\Http\Middleware\HermesFinance;
 use FireflyIII\Http\Middleware\Installer;
 use FireflyIII\Http\Middleware\IsAdmin;
 use FireflyIII\Http\Middleware\Kassa;
@@ -218,6 +219,7 @@ class Kernel extends HttpKernel
             'bindings'   => Binder::class,
             'can'        => Authorize::class,
             'guest'      => RedirectIfAuthenticated::class,
+            'hermes.finance' => HermesFinance::class,
             'throttle'   => ThrottleRequests::class,
         ];
 }

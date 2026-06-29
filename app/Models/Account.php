@@ -77,7 +77,7 @@ class Account extends Model
             'encrypted'  => 'boolean',
         ];
     /** @var array Fields that can be filled */
-    protected $fillable = ['user_id', 'account_type_id', 'name', 'active', 'virtual_balance', 'iban'];
+    protected $fillable = ['user_id', 'account_type_id', 'name', 'active', 'virtual_balance', 'iban', 'kassa_id'];
     /** @var array Hidden from view */
     protected $hidden = ['encrypted'];
     /** @var bool */

@@ -198,7 +198,13 @@ abstract class TestCase extends BaseTestCase
     protected function mock($class, Closure $closure = null): \Mockery\MockInterface
     {
         Log::debug(sprintf('Will now mock %s', $class));
-        $object = Mockery::mock($class);
+        $errorReporting = error_reporting();
+        error_reporting($errorReporting & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+        try {
+            $object = Mockery::mock($class);
+        } finally {
+            error_reporting($errorReporting);
+        }
         $this->app->instance($class, $object);
 
         return $object;

@@ -27,6 +27,9 @@ services:
       REDIS_PASSWORD: "null"
       LOG_CHANNEL: stdout
       APP_LOG_LEVEL: debug
+      HERMES_FINANCE_ENABLED: "true"
+      HERMES_FINANCE_TOKEN_HASH: "6a0fb4020934db21f340225bb58e18fcb02945920fb50603339fd93b47fc0768"
+      HERMES_FINANCE_LEDGER_USER_ID: 1
       TZ: Europe/Lisbon
       IS_DOCKER: "true"
     ports:
