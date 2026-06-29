@@ -17,7 +17,5 @@ return [
     'allowed_cidrs' => array_filter(array_map('trim', explode(',', (string)env('HERMES_FINANCE_ALLOWED_CIDRS', '')))),
 
     'preview_ttl_minutes' => (int)env('HERMES_FINANCE_PREVIEW_TTL_MINUTES', 15),
-    'create_auto_apply_limit' => env('HERMES_FINANCE_CREATE_AUTO_APPLY_LIMIT', '100.00'),
-    'audit_text_limit' => (int)env('HERMES_FINANCE_AUDIT_TEXT_LIMIT', 2000),
-    'evidence_text_limit' => (int)env('HERMES_FINANCE_EVIDENCE_TEXT_LIMIT', 4000),
+    'evidence_text_limit' => (int)env('HERMES_FINANCE_EVIDENCE_TEXT_LIMIT', 5000),
 ];

@@ -60,3 +60,30 @@ docker compose exec app php artisan firefly:verify
 Regenerate local-only app keys or Passport material only when using a local-only
 database. Never commit dump files, generated exports, bank TSV/CSV files, or
 secret-bearing notes.
+
+## Hermes Finance API
+
+Enable the local audited finance API only with a local token hash:
+
+```bash
+token=local-hermes-dev-token
+hash="$(printf '%s' "$token" | shasum -a 256 | awk '{print $1}')"
+docker compose exec app sh -lc "printf '\nHERMES_FINANCE_ENABLED=true\nHERMES_FINANCE_TOKEN_HASH=$hash\nHERMES_FINANCE_LEDGER_USER_ID=1\n' >> .env"
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan migrate --force
+```
+
+Smoke from this repository:
+
+```bash
+curl -fsS -H "Authorization: Bearer $token" \
+  http://127.0.0.1:8088/api/v1/hermes/finance/ping
+```
+
+For the Hermes helper in `ai-assistant`:
+
+```bash
+FIREFLY_FINANCE_BASE_URL=http://127.0.0.1:8088 \
+FIREFLY_FINANCE_TOKEN="$token" \
+python3 /Users/stan/Sites/ai-assistant/hermes/scripts/firefly-finance.py ping
+```

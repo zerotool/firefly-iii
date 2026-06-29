@@ -15,6 +15,8 @@ class FinanceTransactionPreviewRequest extends Request
 
     public function rules(): array
     {
+        $evidenceTextLimit = (int)config('hermes_finance.evidence_text_limit', 5000);
+
         return [
             'action'                 => 'required|in:create,update,delete',
             'transaction_type'       => 'nullable|in:withdrawal,deposit,transfer',
@@ -38,10 +40,10 @@ class FinanceTransactionPreviewRequest extends Request
             'source_id'              => 'nullable|string|max:191',
             'source_hash'            => 'nullable|string|max:128',
             'evidence'               => 'nullable|array',
-            'evidence.*'             => 'nullable|string|max:5000',
+            'evidence.*'             => 'nullable|string|max:' . $evidenceTextLimit,
             'evidence.vendor'        => 'nullable|string|max:255',
-            'evidence.text'          => 'nullable|string|max:5000',
-            'evidence.extracted_text' => 'nullable|string|max:5000',
+            'evidence.text'          => 'nullable|string|max:' . $evidenceTextLimit,
+            'evidence.extracted_text' => 'nullable|string|max:' . $evidenceTextLimit,
             'evidence.email_subject' => 'nullable|string|max:255',
             'evidence.email_from'    => 'nullable|string|max:255',
             'evidence.received_at'   => 'nullable|date',
