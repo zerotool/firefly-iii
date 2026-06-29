@@ -1,46 +1,75 @@
---- 
-networks: 
-  firefly_iii_net: 
-    driver: bridge
-services: 
-  firefly_iii_app: 
-    environment: 
-      - FF_DB_HOST=firefly_iii_db
-      - FF_DB_NAME=firefly
-      - FF_DB_USER=firefly
-      - FF_DB_PASSWORD=firefly
-      - FF_APP_KEY=S0m3R@nd0mStr1ngOf32Ch@rsEx@ctly
-      - FF_APP_ENV=local
-      - FF_DB_CONNECTION=pgsql
-      - TZ=Europe/Amsterdam
-      - APP_LOG_LEVEL=debug
-    image: jc5x/firefly-iii
-    links: 
-      - firefly_iii_db
-    networks: 
-      - firefly_iii_net
-    ports: 
-      - "80:80"
-    volumes: 
-      - 
-        source: firefly_iii_export
-        target: /var/www/firefly-iii/storage/export
-        type: volume
-      - 
-        source: firefly_iii_upload
-        target: /var/www/firefly-iii/storage/upload
-        type: volume
-  firefly_iii_db: 
-    environment: 
-      - POSTGRES_PASSWORD=firefly
-      - POSTGRES_USER=firefly
-    image: "postgres:10"
-    networks: 
-      - firefly_iii_net
-    volumes: 
-      - "firefly_iii_db:/var/lib/postgresql/data"
-version: "3.2"
-volumes: 
-  firefly_iii_db: ~
-  firefly_iii_export: ~
-  firefly_iii_upload: ~
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev/php74/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: SomeRandomStringOf32CharsExactly
+      APP_URL: http://localhost:${FIREFLY_HTTP_PORT:-8088}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: firefly
+      DB_USERNAME: firefly
+      DB_PASSWORD: firefly
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: "null"
+      LOG_CHANNEL: stdout
+      APP_LOG_LEVEL: debug
+      TZ: Europe/Lisbon
+      IS_DOCKER: "true"
+    ports:
+      - "${FIREFLY_HTTP_PORT:-8088}:80"
+    volumes:
+      - .:/var/www/firefly-iii
+      - firefly_storage:/var/www/firefly-iii/storage
+    working_dir: /var/www/firefly-iii
+    command: >
+      sh -lc "mkdir -p storage/app/public storage/framework/cache/data
+      storage/framework/sessions storage/framework/testing storage/framework/views
+      storage/logs storage/upload bootstrap/cache &&
+      chown -R www-data:www-data storage bootstrap/cache &&
+      apache2-foreground"
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: firefly
+      MARIADB_USER: firefly
+      MARIADB_PASSWORD: firefly
+      MARIADB_ROOT_PASSWORD: firefly-root
+      TZ: Europe/Lisbon
+    ports:
+      - "3307:3306"
+    volumes:
+      - firefly_db:/var/lib/mysql
+      - ./docker/dev/mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./database-dumps:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "63790:6379"
+    volumes:
+      - firefly_redis:/data
+
+volumes:
+  firefly_db:
+  firefly_redis:
+  firefly_storage:

@@ -1,3 +1,20 @@
 # Ignore composer specific files and vendor folder
 composer.phar
 vendor
+
+# Keep private local artifacts out of Docker build contexts.
+.git
+.gradle
+.env
+import
+dumps
+database-dumps
+storage-dumps
+*.tsv
+*.csv
+*.sql
+*.sql.gz
+*.dump
+*.dump.gz
+*_CONTEXT.md
+*_SUMMARY.md

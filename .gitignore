@@ -13,3 +13,19 @@ public/google*.html
 report.html
 composer.phar
 /.idea
+
+# Local/private finance artifacts. Keep raw dumps, bank exports, and generated
+# agent notes outside commits; promote only redacted, reviewed docs into docs/.
+/.gradle
+/import/
+/*.tsv
+/*.csv
+/*.sql
+/*.sql.gz
+/*.dump
+/*.dump.gz
+/dumps/
+/database-dumps/
+/storage-dumps/
+/*_CONTEXT.md
+/*_SUMMARY.md
