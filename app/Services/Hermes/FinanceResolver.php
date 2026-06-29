@@ -30,7 +30,7 @@ class FinanceResolver
 
         $this->resolveAccountEntity($intent, $user, $input, 'source_account', 'asset_accounts', self::SOURCE_ACCOUNT_TYPES);
         $this->resolveAccountEntity($intent, $user, $input, 'actor', 'actors', $this->actorTypes($input));
-        $this->resolveAccountEntity($intent, $user, $input, 'destination_account', 'actors', $this->actorTypes($input));
+        $this->resolveAccountEntity($intent, $user, $input, 'destination_account', $this->destinationAliasGroup($input), $this->destinationTypes($input));
         $this->resolveAccountEntity($intent, $user, $input, 'hotel', 'hotels', [AccountType::ASSET, AccountType::CASH, AccountType::EXPENSE, AccountType::REVENUE]);
 
         $this->resolveCategory($intent, $user, $input);
@@ -53,6 +53,26 @@ class FinanceResolver
         }
 
         return [AccountType::EXPENSE];
+    }
+
+    private function destinationTypes(array $input): array
+    {
+        $type = strtolower((string)($input['transaction_type'] ?? 'withdrawal'));
+        if ('deposit' === $type || 'transfer' === $type) {
+            return self::SOURCE_ACCOUNT_TYPES;
+        }
+
+        return [AccountType::EXPENSE];
+    }
+
+    private function destinationAliasGroup(array $input): string
+    {
+        $type = strtolower((string)($input['transaction_type'] ?? 'withdrawal'));
+        if ('deposit' === $type || 'transfer' === $type) {
+            return 'asset_accounts';
+        }
+
+        return 'actors';
     }
 
     private function resolveAccountEntity(ResolvedFinanceIntent $intent, User $user, array $input, string $key, string $aliasGroup, array $types): void
@@ -251,6 +271,10 @@ class FinanceResolver
                 }
             )
         );
+
+        if ($found->count() > 0) {
+            return $this->uniqueCandidates($found->sortByDesc('confidence')->all());
+        }
 
         if (mb_strlen($phrase) >= 3) {
             $found = $found->merge(
