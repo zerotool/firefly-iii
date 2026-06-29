@@ -32,21 +32,45 @@ class FinanceTransactionPreview
     /** @var Carbon|null */
     private $expiresAt;
 
-    public function __construct(string $action, bool $canApply, array $payload, array $resolved, array $errors = [], array $candidates = [], ?string $previewToken = null, ?Carbon $expiresAt = null)
+    /** @var array */
+    private $sourceMetadata;
+
+    /** @var bool */
+    private $requiresConfirmation;
+
+    public function __construct(string $action, bool $canApply, array $payload, array $resolved, array $errors = [], array $candidates = [], ?string $previewToken = null, ?Carbon $expiresAt = null, array $sourceMetadata = [], bool $requiresConfirmation = false)
     {
-        $this->action       = $action;
-        $this->canApply     = $canApply;
-        $this->payload      = $payload;
-        $this->resolved     = $resolved;
-        $this->errors       = $errors;
-        $this->candidates   = $candidates;
-        $this->previewToken = $previewToken;
-        $this->expiresAt    = $expiresAt;
+        $this->action               = $action;
+        $this->canApply             = $canApply;
+        $this->payload              = $payload;
+        $this->resolved             = $resolved;
+        $this->errors               = $errors;
+        $this->candidates           = $candidates;
+        $this->previewToken         = $previewToken;
+        $this->expiresAt            = $expiresAt;
+        $this->sourceMetadata       = $sourceMetadata;
+        $this->requiresConfirmation = $requiresConfirmation;
     }
 
     public function canApply(): bool
     {
         return $this->canApply;
+    }
+
+    public function withSourceMetadata(array $sourceMetadata, bool $requiresConfirmation): self
+    {
+        return new self(
+            $this->action,
+            $this->canApply,
+            $this->payload,
+            $this->resolved,
+            $this->errors,
+            $this->candidates,
+            $this->previewToken,
+            $this->expiresAt,
+            $sourceMetadata,
+            $requiresConfirmation
+        );
     }
 
     public function toArray(): array
@@ -60,6 +84,8 @@ class FinanceTransactionPreview
             'resolved'      => $this->resolved,
             'candidates'    => $this->candidates,
             'errors'        => $this->errors,
+            'source_metadata' => $this->sourceMetadata,
+            'requires_confirmation' => $this->requiresConfirmation,
         ];
     }
 }

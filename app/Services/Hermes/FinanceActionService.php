@@ -36,8 +36,9 @@ class FinanceActionService
 
     public function preview(User $user, array $input): FinanceTransactionPreview
     {
-        $action = (string)($input['action'] ?? 'create');
-        $source = $this->source($input);
+        $action         = (string)($input['action'] ?? 'create');
+        $source         = $this->source($input);
+        $sourceMetadata = $this->sourceMetadata($input, $source);
 
         try {
             if ('create' === $action) {
@@ -53,6 +54,7 @@ class FinanceActionService
             $preview = new FinanceTransactionPreview($action, false, [], [], [$e->getMessage()]);
         }
 
+        $preview = $preview->withSourceMetadata($sourceMetadata, $this->requiresConfirmation($input));
         $audit = $this->auditPreview($user, $input, $preview, $source);
 
         if (!$preview->canApply()) {
@@ -75,13 +77,16 @@ class FinanceActionService
             $data['errors'],
             $data['candidates'],
             $token,
-            $expiresAt
+            $expiresAt,
+            $data['source_metadata'],
+            $data['requires_confirmation']
         );
     }
 
     public function apply(User $user, array $input): array
     {
         $source = $this->source($input);
+        $inputMetadata = $this->sourceMetadata($input, $source);
 
         $existing = HermesFinanceAudit::query()
                                       ->where('source', $source)
@@ -118,6 +123,7 @@ class FinanceActionService
                 function () use ($user, $input, $preview, $source) {
                     $payload = (array)$preview->resolved_payload;
                     $action  = (string)$preview->action;
+                    $sourceMetadata = $this->previewSourceMetadata($preview, $input, $source);
 
                     $this->assertPreviewStillValid($user, $payload);
 
@@ -135,7 +141,9 @@ class FinanceActionService
                         [
                             'user_id'          => $user->id,
                             'source'           => $source,
-                            'source_id'        => (string)($input['source_id'] ?? ''),
+                            'source_type'      => $sourceMetadata['source_type'] ?? '',
+                            'source_id'        => $sourceMetadata['source_id'] ?? '',
+                            'source_hash'      => $sourceMetadata['source_hash'] ?? '',
                             'idempotency_key'  => (string)$input['idempotency_key'],
                             'action'           => $action,
                             'mode'             => 'apply',
@@ -154,11 +162,14 @@ class FinanceActionService
                 }
             );
         } catch (Exception $e) {
+            $sourceMetadata = $this->previewSourceMetadata($preview, $input, $source);
             HermesFinanceAudit::create(
                 [
                     'user_id'          => $user->id,
                     'source'           => $source,
-                    'source_id'        => (string)($input['source_id'] ?? ''),
+                    'source_type'      => $sourceMetadata['source_type'] ?? $inputMetadata['source_type'] ?? '',
+                    'source_id'        => $sourceMetadata['source_id'] ?? $inputMetadata['source_id'] ?? '',
+                    'source_hash'      => $sourceMetadata['source_hash'] ?? $inputMetadata['source_hash'] ?? '',
                     'action'           => (string)$preview->action,
                     'mode'             => 'apply',
                     'status'           => 'failed',
@@ -193,6 +204,7 @@ class FinanceActionService
     {
         $resolved = $this->resolver->resolve($user, $input)->toArray();
         $errors   = $this->resolutionErrors($resolved);
+        $errors   = array_merge($errors, $this->sourceSpecificErrors($input, 'create'));
         $type     = $this->transactionType($input);
 
         foreach (['amount', 'description'] as $field) {
@@ -782,7 +794,9 @@ class FinanceActionService
             [
                 'user_id'          => $user->id,
                 'source'           => $source,
+                'source_type'      => $data['source_metadata']['source_type'] ?? '',
                 'source_id'        => (string)($input['source_id'] ?? ''),
+                'source_hash'      => $data['source_metadata']['source_hash'] ?? '',
                 'action'           => $data['action'],
                 'mode'             => 'preview',
                 'status'           => $data['can_apply'] ? 'pending_token' : 'blocked',
@@ -793,6 +807,8 @@ class FinanceActionService
                     'resolved'   => $data['resolved'],
                     'candidates' => $data['candidates'],
                     'errors'     => $data['errors'],
+                    'source_metadata' => $data['source_metadata'],
+                    'requires_confirmation' => $data['requires_confirmation'],
                 ],
                 'journal_ids'      => $this->payloadJournalIds($data['payload']),
             ]
@@ -836,6 +852,61 @@ class FinanceActionService
         $source = (string)($input['source'] ?? 'hermes');
 
         return '' === $source ? 'hermes' : $source;
+    }
+
+    private function sourceMetadata(array $input, string $source): array
+    {
+        $sourceType = strtolower(trim((string)($input['source_type'] ?? '')));
+        if ('' === $sourceType) {
+            $sourceType = 'hermes' === $source ? 'telegram' : $source;
+        }
+
+        $metadata = [
+            'source'      => $source,
+            'source_type' => $sourceType,
+            'source_id'   => (string)($input['source_id'] ?? ''),
+            'source_hash' => (string)($input['source_hash'] ?? ''),
+        ];
+
+        $evidence = (array)($input['evidence'] ?? []);
+        if ([] !== $evidence) {
+            $text = (string)($evidence['text'] ?? $evidence['extracted_text'] ?? '');
+            $metadata['evidence'] = [
+                'keys'        => array_values(array_keys($evidence)),
+                'text_length' => mb_strlen($text),
+            ];
+        }
+
+        return $metadata;
+    }
+
+    private function requiresConfirmation(array $input): bool
+    {
+        $action = (string)($input['action'] ?? 'create');
+
+        return \in_array($action, ['create', 'update', 'delete'], true);
+    }
+
+    private function sourceSpecificErrors(array $input, string $action): array
+    {
+        $sourceType = strtolower((string)($input['source_type'] ?? ''));
+        if ('create' !== $action || !\in_array($sourceType, ['receipt', 'email'], true)) {
+            return [];
+        }
+
+        if (!isset($input['category']) || '' === trim((string)$input['category'])) {
+            return ['Missing required field: category for receipt/email source.'];
+        }
+
+        return [];
+    }
+
+    private function previewSourceMetadata(HermesFinanceAudit $preview, array $input, string $source): array
+    {
+        $resultPayload = (array)$preview->result_payload;
+        $metadata      = (array)($resultPayload['source_metadata'] ?? []);
+
+        return [] === $metadata ? $this->sourceMetadata($input, $source) : $metadata;
     }
 
     private function limit(array $input): int

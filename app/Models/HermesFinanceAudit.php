@@ -13,7 +13,9 @@ class HermesFinanceAudit extends Model
         = [
             'user_id',
             'source',
+            'source_type',
             'source_id',
+            'source_hash',
             'idempotency_key',
             'action',
             'mode',

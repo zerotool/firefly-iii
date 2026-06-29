@@ -19,7 +19,9 @@ class FinanceTransactionApplyRequest extends Request
             'preview_token'   => 'required|string|min:32|max:255',
             'idempotency_key' => 'required|string|min:8|max:191',
             'source'          => 'nullable|string|max:64',
+            'source_type'     => 'nullable|string|max:32',
             'source_id'       => 'nullable|string|max:191',
+            'source_hash'     => 'nullable|string|max:128',
         ];
     }
 }
