@@ -10,5 +10,6 @@ Route::group(
         Route::post('transactions/search', ['uses' => 'FinanceTransactionController@search', 'as' => 'transactions.search']);
         Route::post('transactions/preview', ['uses' => 'FinanceTransactionController@preview', 'as' => 'transactions.preview']);
         Route::post('transactions/apply', ['uses' => 'FinanceTransactionController@apply', 'as' => 'transactions.apply']);
+        Route::post('reports', ['uses' => 'FinanceReportController@report', 'as' => 'reports']);
     }
 );

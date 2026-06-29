@@ -102,7 +102,7 @@ class FinanceResolverTest extends TestCase
             ]
         )->toArray();
 
-        $this->assertFalse($result['requires_confirmation']);
+        $this->assertFalse($result['requires_confirmation'], json_encode($result));
         $this->assertSame($this->asset->id, $result['entities']['source_account']['selected']['id']);
         $this->assertSame($this->expenseActor->id, $result['entities']['actor']['selected']['id']);
         $this->assertSame($this->category->id, $result['entities']['category']['selected']['id']);

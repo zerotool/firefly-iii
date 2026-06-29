@@ -213,7 +213,8 @@ class FinanceResolver
     {
         $normalized = $this->normalize($phrase);
         $aliases    = $this->aliasesFor('currencies', $normalized);
-        $values     = array_unique(array_merge([$phrase], $aliases));
+        $values     = [] === $aliases ? [$phrase] : $aliases;
+        $values     = array_unique($values);
         $found      = new Collection;
 
         foreach ($values as $value) {
@@ -246,7 +247,9 @@ class FinanceResolver
     private function rankedCandidates(Builder $baseQuery, string $phrase, string $aliasGroup, callable $serialize): array
     {
         $normalized = $this->normalize($phrase);
-        $values     = array_unique(array_merge([$phrase], $this->aliasesFor($aliasGroup, $normalized)));
+        $aliases    = $this->aliasesFor($aliasGroup, $normalized);
+        $values     = [] === $aliases ? [$phrase] : $aliases;
+        $values     = array_unique($values);
         $found      = new Collection;
 
         foreach ($values as $value) {
@@ -257,6 +260,10 @@ class FinanceResolver
                     }
                 )
             );
+        }
+
+        if ([] !== $aliases && $found->count() > 0) {
+            return $this->uniqueCandidates($found->sortByDesc('confidence')->all());
         }
 
         $found = $found->merge(
