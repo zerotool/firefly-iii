@@ -31,7 +31,7 @@ class FinanceResolver
         $this->resolveAccountEntity($intent, $user, $input, 'source_account', 'asset_accounts', self::SOURCE_ACCOUNT_TYPES);
         $this->resolveAccountEntity($intent, $user, $input, 'actor', 'actors', $this->actorTypes($input));
         $this->resolveAccountEntity($intent, $user, $input, 'destination_account', $this->destinationAliasGroup($input), $this->destinationTypes($input));
-        $this->resolveAccountEntity($intent, $user, $input, 'hotel', 'hotels', [AccountType::ASSET, AccountType::CASH, AccountType::EXPENSE, AccountType::REVENUE]);
+        $this->resolveAccountEntity($intent, $user, $input, 'hotel', 'hotels', $this->hotelTypes($input));
 
         $this->resolveCategory($intent, $user, $input);
         $budgetCandidates = $this->resolveBudget($intent, $user, $input);
@@ -73,6 +73,22 @@ class FinanceResolver
         }
 
         return 'actors';
+    }
+
+    private function hotelTypes(array $input): array
+    {
+        $type = strtolower((string)($input['transaction_type'] ?? ''));
+        if ('deposit' === $type) {
+            return [AccountType::REVENUE];
+        }
+        if ('withdrawal' === $type) {
+            return [AccountType::EXPENSE];
+        }
+        if ('transfer' === $type) {
+            return self::SOURCE_ACCOUNT_TYPES;
+        }
+
+        return [AccountType::ASSET, AccountType::CASH, AccountType::EXPENSE, AccountType::REVENUE];
     }
 
     private function resolveAccountEntity(ResolvedFinanceIntent $intent, User $user, array $input, string $key, string $aliasGroup, array $types): void

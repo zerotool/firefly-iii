@@ -13,6 +13,7 @@ use FireflyIII\Models\BudgetLimit;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
+use FireflyIII\Repositories\Account\AccountTaskerInterface;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -60,10 +61,10 @@ class FinanceReportService
             return $this->accountBalances($user, $input, $range, $resolved);
         }
         if ('hotel' === $report) {
-            return $this->scopedActivity($user, $range, $resolved, 'hotel');
+            return $this->scopedActivity($user, $input, $range, $resolved, 'hotel');
         }
         if ('actor' === $report) {
-            return $this->scopedActivity($user, $range, $resolved, 'actor');
+            return $this->scopedActivity($user, $input, $range, $resolved, 'actor');
         }
         if ('transactions' === $report) {
             return $this->transactions($user, $input, $range, $resolved);
@@ -239,7 +240,7 @@ class FinanceReportService
         return $this->response('account_balances', $range, $resolved, ['accounts' => $balances]);
     }
 
-    private function scopedActivity(User $user, array $range, array $resolved, string $key): array
+    private function scopedActivity(User $user, array $input, array $range, array $resolved, string $key): array
     {
         $selected = $this->selected($resolved, $key);
         if (null === $selected) {
@@ -251,9 +252,51 @@ class FinanceReportService
             return $this->response($key, $range, $resolved, [], ['Account no longer exists.']);
         }
 
+        $type = strtolower((string)($input['transaction_type'] ?? ''));
+        if ('hotel' === $key && \in_array($type, ['deposit', 'withdrawal'], true)) {
+            return $this->hotelOpposingReport($user, $range, $resolved, $account, $type);
+        }
+
         $rows = $this->accountActivityRows($user, $account, $range);
 
         return $this->response($key, $range, $resolved, ['account' => $this->accountArray($account), 'currencies' => $rows]);
+    }
+
+    private function hotelOpposingReport(User $user, array $range, array $resolved, Account $hotel, string $type): array
+    {
+        $accounts = $this->reportBalanceAccounts($user, $resolved);
+        if (0 === $accounts->count()) {
+            return $this->response('hotel', $range, $resolved, [], ['No balance accounts available for hotel report.']);
+        }
+
+        if (!auth()->check() || (int)auth()->id() !== $user->id) {
+            auth()->setUser($user);
+        }
+
+        /** @var AccountTaskerInterface $tasker */
+        $tasker = app(AccountTaskerInterface::class);
+        $tasker->setUser($user);
+        $rows = 'deposit' === $type
+            ? $tasker->getIncomeReport($range['start'], $range['end'], $accounts)
+            : $tasker->getExpenseReport($range['start'], $range['end'], $accounts);
+
+        $entries = [];
+        foreach ($rows as $row) {
+            if ((int)$row['id'] === $hotel->id) {
+                $entries[] = $this->reportEntryArray($row, $type);
+            }
+        }
+
+        $payload = [
+            'account'               => $this->accountArray($hotel),
+            'direction'             => 'deposit' === $type ? 'income' : 'expenses',
+            'report_accounts_count' => $accounts->count(),
+            'entries'               => $entries,
+            'daily'                 => $this->opposingDailyRows($user, $hotel, $accounts, $range, $type),
+            'currencies'            => $this->currencySummariesFromReportEntries($entries, $type),
+        ];
+
+        return $this->response('hotel', $range, $resolved, $payload);
     }
 
     private function transactions(User $user, array $input, array $range, array $resolved): array
@@ -394,6 +437,170 @@ class FinanceReportService
                 $summary[$currencyId]['transfers'] = bcadd($summary[$currencyId]['transfers'], $this->absolute((string)$row->amount));
             }
             $summary[$currencyId]['net'] = bcadd($summary[$currencyId]['net'], (string)$row->amount);
+        }
+
+        return array_values($summary);
+    }
+
+    private function reportBalanceAccounts(User $user, array $resolved): Collection
+    {
+        $selected = $this->selectedAccounts($user, $resolved)->filter(
+            function (Account $account) {
+                return \in_array(optional($account->accountType)->type, self::BALANCE_ACCOUNT_TYPES, true);
+            }
+        )->values();
+
+        if ($selected->count() > 0) {
+            return $selected;
+        }
+
+        return Account::query()
+                      ->with('accountType')
+                      ->where('user_id', $user->id)
+                      ->where('active', true)
+                      ->whereNull('deleted_at')
+                      ->whereHas(
+                          'accountType',
+                          function (Builder $query) {
+                              $query->whereIn('type', self::BALANCE_ACCOUNT_TYPES);
+                          }
+                      )
+                      ->get();
+    }
+
+    private function reportEntryArray(array $row, string $type): array
+    {
+        /** @var TransactionCurrency|null $currency */
+        $currency = $row['single_currency'] ?? null;
+        $sum      = $this->absolute((string)$row['sum']);
+        $average  = $this->absolute((string)$row['average']);
+        $formatted = [
+            'sum'     => $sum,
+            'average' => $average,
+        ];
+        if (null !== $currency) {
+            $formatted = [
+                'sum'     => app('amount')->formatAnything($currency, $sum, false),
+                'average' => app('amount')->formatAnything($currency, $average, false),
+            ];
+        }
+
+        return [
+            'id'        => (int)$row['id'],
+            'name'      => (string)$row['name'],
+            'original'  => (string)$row['original'],
+            'direction' => 'deposit' === $type ? 'income' : 'expenses',
+            'sum'       => $sum,
+            'average'   => $average,
+            'count'     => (int)$row['count'],
+            'currency'  => $this->currencyArray($currency),
+            'formatted' => $formatted,
+        ];
+    }
+
+    private function opposingDailyRows(User $user, Account $opposing, Collection $accounts, array $range, string $type): array
+    {
+        $accountIds = $accounts->pluck('id')->map(
+            function ($id) {
+                return (int)$id;
+            }
+        )->all();
+        if ([] === $accountIds) {
+            return [];
+        }
+
+        $transactionTypes = 'deposit' === $type
+            ? [TransactionType::DEPOSIT, TransactionType::TRANSFER]
+            : [TransactionType::WITHDRAWAL, TransactionType::TRANSFER];
+        $amountOperator = 'deposit' === $type ? '>' : '<';
+
+        $rows = DB::table('transactions')
+                  ->join('transaction_journals', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
+                  ->join('transaction_types', 'transaction_types.id', '=', 'transaction_journals.transaction_type_id')
+                  ->join('transaction_currencies', 'transaction_currencies.id', '=', 'transactions.transaction_currency_id')
+                  ->join(
+                      'transactions as opposing_transactions',
+                      function ($join) use ($opposing) {
+                          $join->on('opposing_transactions.transaction_journal_id', '=', 'transactions.transaction_journal_id')
+                               ->on('opposing_transactions.identifier', '=', 'transactions.identifier')
+                               ->where('opposing_transactions.account_id', '=', $opposing->id)
+                               ->whereNull('opposing_transactions.deleted_at');
+                      }
+                  )
+                  ->where('transaction_journals.user_id', $user->id)
+                  ->whereNull('transaction_journals.deleted_at')
+                  ->whereNull('transactions.deleted_at')
+                  ->whereIn('transactions.account_id', $accountIds)
+                  ->whereIn('transaction_types.type', $transactionTypes)
+                  ->where('transactions.amount', $amountOperator, 0)
+                  ->where('transaction_journals.date', '>=', $range['start']->format('Y-m-d 00:00:00'))
+                  ->where('transaction_journals.date', '<=', $range['end']->format('Y-m-d 23:59:59'))
+                  ->groupBy(DB::raw('DATE(transaction_journals.date)'))
+                  ->groupBy('transaction_currencies.id')
+                  ->groupBy('transaction_currencies.code')
+                  ->groupBy('transaction_currencies.symbol')
+                  ->groupBy('transaction_currencies.decimal_places')
+                  ->orderBy('date')
+                  ->get(
+                      [
+                          DB::raw('DATE(transaction_journals.date) as date'),
+                          'transaction_currencies.id as currency_id',
+                          'transaction_currencies.code as currency_code',
+                          'transaction_currencies.symbol as currency_symbol',
+                          'transaction_currencies.decimal_places as currency_decimal_places',
+                          DB::raw('SUM(transactions.amount) as amount'),
+                          DB::raw('COUNT(transactions.id) as count'),
+                      ]
+                  );
+
+        return $rows->map(
+            function ($row) use ($type) {
+                $amount = 'deposit' === $type ? (string)$row->amount : $this->absolute((string)$row->amount);
+
+                return [
+                    'date'      => (string)$row->date,
+                    'amount'    => $amount,
+                    'count'     => (int)$row->count,
+                    'currency'  => [
+                        'id'             => (int)$row->currency_id,
+                        'code'           => (string)$row->currency_code,
+                        'symbol'         => (string)$row->currency_symbol,
+                        'decimal_places' => (int)$row->currency_decimal_places,
+                    ],
+                    'direction' => 'deposit' === $type ? 'income' : 'expenses',
+                ];
+            }
+        )->all();
+    }
+
+    private function currencySummariesFromReportEntries(array $entries, string $type): array
+    {
+        $summary = [];
+        foreach ($entries as $entry) {
+            $currency = $entry['currency'] ?? [];
+            $currencyId = (int)($currency['id'] ?? 0);
+            if ($currencyId < 1) {
+                continue;
+            }
+            if (!isset($summary[$currencyId])) {
+                $summary[$currencyId] = $this->emptyCurrencySummary(
+                    (object)[
+                        'currency_id'             => $currencyId,
+                        'currency_code'           => (string)($currency['code'] ?? ''),
+                        'currency_symbol'         => (string)($currency['symbol'] ?? ''),
+                        'currency_decimal_places' => (int)($currency['decimal_places'] ?? 2),
+                    ]
+                );
+            }
+
+            $amount = (string)$entry['sum'];
+            if ('deposit' === $type) {
+                $summary[$currencyId]['income'] = bcadd($summary[$currencyId]['income'], $amount);
+                $summary[$currencyId]['net']    = bcadd($summary[$currencyId]['net'], $amount);
+                continue;
+            }
+            $summary[$currencyId]['expenses'] = bcadd($summary[$currencyId]['expenses'], $amount);
+            $summary[$currencyId]['net']      = bcsub($summary[$currencyId]['net'], $amount);
         }
 
         return array_values($summary);

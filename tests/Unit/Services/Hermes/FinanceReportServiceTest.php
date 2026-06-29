@@ -169,6 +169,91 @@ class FinanceReportServiceTest extends TestCase
         $this->assertSame($expected, $result['payload']['accounts'][0]['balance']);
     }
 
+    /**
+     * @covers \FireflyIII\Services\Hermes\FinanceReportService
+     * @covers \FireflyIII\Services\Hermes\FinanceResolver
+     */
+    public function testHotelIncomeReportUsesRevenueAccountAndMatchesDefaultIncomeSemantics(): void
+    {
+        $hotelName    = 'Казанская 8-10 ' . $this->suffix;
+        $hotelRevenue = $this->account($hotelName, AccountType::REVENUE);
+        $this->account($hotelName, AccountType::EXPENSE);
+
+        config()->set('hermes_finance_aliases.hotels', [['name' => $hotelName, 'aliases' => ['report-kaz-hotel']]]);
+        $actors = (array)config('hermes_finance_aliases.actors', []);
+        $actors[] = ['name' => $hotelName, 'aliases' => ['report-kaz-hotel']];
+        config()->set('hermes_finance_aliases.actors', $actors);
+
+        $this->createTransaction(
+            [
+                'action'              => 'create',
+                'transaction_type'    => 'deposit',
+                'amount'              => '100.00',
+                'description'         => 'Hotel booking one ' . $this->suffix,
+                'date'                => $this->transactionDate->toDateString(),
+                'actor'               => 'report-kaz-hotel',
+                'destination_account' => 'report-cgd',
+                'currency'            => 'report-rub',
+                'source'              => 'phpunit-report',
+            ]
+        );
+        $this->createTransaction(
+            [
+                'action'              => 'create',
+                'transaction_type'    => 'deposit',
+                'amount'              => '50.00',
+                'description'         => 'Hotel booking two ' . $this->suffix,
+                'date'                => $this->transactionDate->copy()->addDay()->toDateString(),
+                'actor'               => 'report-kaz-hotel',
+                'destination_account' => 'report-cgd',
+                'currency'            => 'report-rub',
+                'source'              => 'phpunit-report',
+            ]
+        );
+        $this->createTransaction(
+            [
+                'action'           => 'create',
+                'transaction_type' => 'withdrawal',
+                'amount'           => '30.00',
+                'description'      => 'Hotel supply expense ' . $this->suffix,
+                'date'             => $this->transactionDate->toDateString(),
+                'source_account'   => 'report-cgd',
+                'actor'            => 'report-kaz-hotel',
+                'category'         => 'report-food',
+                'budget'           => 'report-portugal',
+                'currency'         => 'report-rub',
+                'source'           => 'phpunit-report',
+            ]
+        );
+
+        $result = $this->reports()->report(
+            $this->user,
+            [
+                'report'           => 'hotel',
+                'hotel'            => 'report-kaz-hotel',
+                'transaction_type' => 'deposit',
+                'start'            => $this->periodStart->toDateString(),
+                'end'              => $this->periodEnd->toDateString(),
+            ]
+        );
+
+        $entry = $result['payload']['entries'][0];
+        $rub   = $this->currencySummary($result['payload']['currencies'], 'RUB');
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame([], $result['resolved']['ambiguous']);
+        $this->assertSame($hotelRevenue->id, $result['payload']['account']['id']);
+        $this->assertSame('Revenue account', $result['payload']['account']['account_type']);
+        $this->assertSame('income', $result['payload']['direction']);
+        $this->assertSame(150.0, (float)$entry['sum']);
+        $this->assertSame(75.0, (float)$entry['average']);
+        $this->assertSame(2, $entry['count']);
+        $this->assertCount(2, $result['payload']['daily']);
+        $this->assertSame(100.0, (float)$result['payload']['daily'][0]['amount']);
+        $this->assertSame(50.0, (float)$result['payload']['daily'][1]['amount']);
+        $this->assertSame(150.0, (float)$rub['income']);
+    }
+
     private function reports(): FinanceReportService
     {
         return app(FinanceReportService::class);
